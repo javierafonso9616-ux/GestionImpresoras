@@ -19,20 +19,22 @@ namespace GestionImpresoras
 
         private void ConfigurarGrids()
         {
-            // Inventario
-            dgvInventario.AllowUserToDeleteRows = true;
+            // --- INVENTARIO ---
+            dgvInventario.AllowUserToDeleteRows = false; // Importante: gestionamos nosotros el borrado
             dgvInventario.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvInventario.RowValidated += dgvInventario_RowValidated;
-            dgvInventario.UserDeletingRow += dgvInventario_UserDeletingRow;
-
-            // Bloquear edición en Historial y Totales
-            dgvHistorial.ReadOnly = true;
-            dgvTotales.ReadOnly = true;
-
-            // Suscribir evento de COLORES para todos los grids
             dgvInventario.CellFormatting += AplicarColoresGrupo;
-            dgvPedidoWeb.CellFormatting += AplicarColoresGrupo;
+            dgvInventario.KeyDown += Grids_KeyDown; // Conectar tecla Suprimir
+
+            // --- HISTORIAL ---
+            dgvHistorial.AllowUserToDeleteRows = false;
+            dgvHistorial.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvHistorial.ReadOnly = true;
             dgvHistorial.CellFormatting += AplicarColoresGrupo;
+            dgvHistorial.KeyDown += Grids_KeyDown; // Conectar tecla Suprimir
+
+            // --- TOTALES ---
+            dgvTotales.ReadOnly = true;
             dgvTotales.CellFormatting += AplicarColoresGrupo;
         }
 
@@ -42,13 +44,57 @@ namespace GestionImpresoras
             CargarHistorial();
         }
 
-        // Detectar cuando entras a la pestaña de Historial (asumiendo índice 2)
-        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        // ==========================================
+        // --- LÓGICA DE BORRADO MULTIPLE (TECLA SUPR) ---
+        // ==========================================
+
+        private void Grids_KeyDown(object sender, KeyEventArgs e)
         {
-            if (tabControl1.SelectedIndex == 2) CargarHistorial();
+            if (e.KeyCode == Keys.Delete)
+            {
+                DataGridView grid = (DataGridView)sender;
+                int seleccionados = grid.SelectedRows.Count;
+
+                if (seleccionados == 0) return;
+
+                string mensaje = (seleccionados == 1)
+                    ? "¿Estás seguro de que quieres eliminar este registro?"
+                    : $"¿Estás seguro de que quieres eliminar estos {seleccionados} registros a la vez?";
+
+                if (MessageBox.Show(mensaje, "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    try
+                    {
+                        foreach (DataGridViewRow fila in grid.SelectedRows)
+                        {
+                            if (fila.IsNewRow) continue;
+                            string nSerie = fila.Cells["NSERIE"].Value?.ToString();
+
+                            if (grid.Name == "dgvInventario")
+                            {
+                                db.EjecutarComando("DELETE FROM IMPRESORAS WHERE NSERIE = @ser", new SqlParameter[] { new SqlParameter("@ser", nSerie) });
+                            }
+                            else if (grid.Name == "dgvHistorial")
+                            {
+                                DateTime fecha = Convert.ToDateTime(fila.Cells["FECHA"].Value);
+                                db.EjecutarComando("DELETE FROM TAMBORES WHERE NSERIE = @ser AND FECHA = @fec",
+                                    new SqlParameter[] { new SqlParameter("@ser", nSerie), new SqlParameter("@fec", fecha) });
+                            }
+                        }
+                        // Refrescamos los datos después de borrar todo
+                        CargarInventario();
+                        CargarHistorial();
+                        MessageBox.Show("Registros eliminados correctamente.");
+                    }
+                    catch (Exception ex) { MessageBox.Show("Error al borrar: " + ex.Message); }
+                }
+            }
         }
 
-        // --- COLORES PASTEL PARA LOS GRUPOS ---
+        // ==========================================
+        // --- COLORES PASTEL ---
+        // ==========================================
+
         private void AplicarColoresGrupo(object sender, DataGridViewCellFormattingEventArgs e)
         {
             DataGridView grid = (DataGridView)sender;
@@ -72,21 +118,43 @@ namespace GestionImpresoras
         }
 
         // ==========================================
-        // --- PESTAÑA 1: INVENTARIO ---
+        // --- CARGA DE DATOS ---
         // ==========================================
 
         public void CargarInventario()
         {
             string sql = @"SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, N_MAQUINA, OBSERVACIONES 
-                           FROM IMPRESORAS 
-                           ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC, N_MAQUINA ASC";
-
+                           FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC, N_MAQUINA ASC";
             DataTable dt = db.ObtenerDatos(sql);
-            if (dt != null)
+            if (dt != null) { dgvInventario.DataSource = dt; dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; }
+        }
+
+        public void CargarHistorial()
+        {
+            try
             {
-                dgvInventario.DataSource = dt;
-                dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                string sqlH = @"SELECT I.GRUPO, T.FECHA, T.NSERIE, T.MODELO, T.UBICACION, T.DESCRIPCION 
+                                FROM TAMBORES T LEFT JOIN IMPRESORAS I ON T.NSERIE = I.NSERIE ORDER BY T.FECHA DESC";
+                dgvHistorial.DataSource = db.ObtenerDatos(sqlH);
+
+                string sqlT = @"SELECT I.GRUPO, T.NSERIE, T.MODELO, COUNT(*) as [Total Pedidos], MAX(T.FECHA) as [Último] 
+                                FROM TAMBORES T LEFT JOIN IMPRESORAS I ON T.NSERIE = I.NSERIE 
+                                GROUP BY I.GRUPO, T.NSERIE, T.MODELO ORDER BY I.GRUPO ASC, [Total Pedidos] DESC";
+                dgvTotales.DataSource = db.ObtenerDatos(sqlT);
+
+                dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             }
+            catch { }
+        }
+
+        // ==========================================
+        // --- EVENTOS PESTAÑAS Y SOLICITUD ---
+        // ==========================================
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedIndex == 2) CargarHistorial();
         }
 
         private void dgvInventario_RowValidated(object sender, DataGridViewCellEventArgs e)
@@ -114,18 +182,6 @@ namespace GestionImpresoras
             db.EjecutarComando(sql, p);
         }
 
-        private void dgvInventario_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
-        {
-            string nSerie = e.Row.Cells["NSERIE"].Value?.ToString();
-            if (MessageBox.Show($"¿Eliminar {nSerie}?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                db.EjecutarComando("DELETE FROM IMPRESORAS WHERE NSERIE = @ser", new SqlParameter[] { new SqlParameter("@ser", nSerie) });
-            else e.Cancel = true;
-        }
-
-        // ==========================================
-        // --- PESTAÑA 2: SOLICITAR ---
-        // ==========================================
-
         private void btnMostrarGrupo_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(cmbGrupo.Text)) return;
@@ -137,7 +193,7 @@ namespace GestionImpresoras
         private void btnRegistrarPedido_Click(object sender, EventArgs e)
         {
             if (dgvPedidoWeb.Rows.Count == 0) return;
-            if (MessageBox.Show("¿Registrar estas máquinas en el histórico?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show("¿Registrar pedido?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 foreach (DataGridViewRow fila in dgvPedidoWeb.Rows)
                 {
@@ -153,35 +209,8 @@ namespace GestionImpresoras
                 }
                 dgvPedidoWeb.DataSource = null;
                 CargarHistorial();
-                MessageBox.Show("Historial actualizado.");
+                MessageBox.Show("Pedido registrado.");
             }
-        }
-
-        // ==========================================
-        // --- PESTAÑA 3: HISTORIAL Y TOTALES ---
-        // ==========================================
-
-        public void CargarHistorial()
-        {
-            try
-            {
-                // Historial Detallado con JOIN para traer el GRUPO
-                string sqlH = @"SELECT I.GRUPO, T.FECHA, T.NSERIE, T.MODELO, T.UBICACION, T.DESCRIPCION 
-                                FROM TAMBORES T LEFT JOIN IMPRESORAS I ON T.NSERIE = I.NSERIE 
-                                ORDER BY T.FECHA DESC";
-                dgvHistorial.DataSource = db.ObtenerDatos(sqlH);
-
-                // Totales por Máquina con JOIN para traer el GRUPO
-                string sqlT = @"SELECT I.GRUPO, T.NSERIE, T.MODELO, COUNT(*) as [Total Pedidos], MAX(T.FECHA) as [Último] 
-                                FROM TAMBORES T LEFT JOIN IMPRESORAS I ON T.NSERIE = I.NSERIE 
-                                GROUP BY I.GRUPO, T.NSERIE, T.MODELO 
-                                ORDER BY [Total Pedidos] DESC";
-                dgvTotales.DataSource = db.ObtenerDatos(sqlT);
-
-                dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-                dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            }
-            catch (Exception ex) { Console.WriteLine(ex.Message); }
         }
 
         private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); }
