@@ -30,36 +30,38 @@
         {
             this.dataGridView2 = new System.Windows.Forms.DataGridView();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.cmbGrupo = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.btnMostrarGrupo = new System.Windows.Forms.Button();
-            this.dgvPedidoWeb = new System.Windows.Forms.DataGridView();
-            this.btnRegistrarPedido = new System.Windows.Forms.Button();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.dgvInventario = new System.Windows.Forms.DataGridView();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dgvHistorial = new System.Windows.Forms.DataGridView();
             this.dgvTotales = new System.Windows.Forms.DataGridView();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.button1 = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.btnRegistrarPedido = new System.Windows.Forms.Button();
+            this.cmbGrupo = new System.Windows.Forms.ComboBox();
+            this.btnMostrarGrupo = new System.Windows.Forms.Button();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.dgvInventario = new System.Windows.Forms.DataGridView();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.dgvPedidoWeb = new System.Windows.Forms.DataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.tabPage3.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvPedidoWeb)).BeginInit();
-            this.tabPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvInventario)).BeginInit();
-            this.tabControl1.SuspendLayout();
-            this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvHistorial)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTotales)).BeginInit();
+            this.panel1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
+            this.panel2.SuspendLayout();
+            this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvInventario)).BeginInit();
+            this.tabControl1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvPedidoWeb)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView2
@@ -84,13 +86,87 @@
             this.tabPage3.Text = "Historial y totales";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(5, 98);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.dgvHistorial);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.dgvTotales);
+            this.splitContainer1.Size = new System.Drawing.Size(1886, 884);
+            this.splitContainer1.SplitterDistance = 900;
+            this.splitContainer1.TabIndex = 1;
+            // 
+            // dgvHistorial
+            // 
+            this.dgvHistorial.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvHistorial.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvHistorial.Location = new System.Drawing.Point(0, 0);
+            this.dgvHistorial.Name = "dgvHistorial";
+            this.dgvHistorial.Size = new System.Drawing.Size(900, 884);
+            this.dgvHistorial.TabIndex = 0;
+            // 
+            // dgvTotales
+            // 
+            this.dgvTotales.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTotales.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvTotales.Location = new System.Drawing.Point(0, 0);
+            this.dgvTotales.Name = "dgvTotales";
+            this.dgvTotales.Size = new System.Drawing.Size(982, 884);
+            this.dgvTotales.TabIndex = 0;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.button1);
+            this.panel1.Controls.Add(this.label3);
+            this.panel1.Controls.Add(this.label2);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(5, 5);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(1886, 93);
+            this.panel1.TabIndex = 0;
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.button1.Location = new System.Drawing.Point(7, 3);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(91, 33);
+            this.button1.TabIndex = 2;
+            this.button1.Text = "Recargar";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.btnCargarHistorial_Click);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.Location = new System.Drawing.Point(1744, 60);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(129, 21);
+            this.label3.TabIndex = 1;
+            this.label3.Text = "Pedidos Totales";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.label2.Location = new System.Drawing.Point(3, 60);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(79, 21);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Histórico";
+            // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.btnRegistrarPedido);
             this.tabPage2.Controls.Add(this.dgvPedidoWeb);
-            this.tabPage2.Controls.Add(this.btnMostrarGrupo);
-            this.tabPage2.Controls.Add(this.label1);
-            this.tabPage2.Controls.Add(this.cmbGrupo);
+            this.tabPage2.Controls.Add(this.panel2);
             this.tabPage2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold);
             this.tabPage2.Location = new System.Drawing.Point(4, 50);
             this.tabPage2.Name = "tabPage2";
@@ -100,10 +176,43 @@
             this.tabPage2.Text = "Pedidos";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.label1);
+            this.panel2.Controls.Add(this.btnRegistrarPedido);
+            this.panel2.Controls.Add(this.cmbGrupo);
+            this.panel2.Controls.Add(this.btnMostrarGrupo);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel2.Location = new System.Drawing.Point(5, 5);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(1886, 64);
+            this.panel2.TabIndex = 5;
+            this.panel2.TabStop = true;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(49, 16);
+            this.label1.TabIndex = 6;
+            this.label1.Text = "Grupo";
+            // 
+            // btnRegistrarPedido
+            // 
+            this.btnRegistrarPedido.Location = new System.Drawing.Point(393, 26);
+            this.btnRegistrarPedido.Name = "btnRegistrarPedido";
+            this.btnRegistrarPedido.Size = new System.Drawing.Size(218, 23);
+            this.btnRegistrarPedido.TabIndex = 8;
+            this.btnRegistrarPedido.Text = "Registrar Grupo";
+            this.btnRegistrarPedido.UseVisualStyleBackColor = true;
+            this.btnRegistrarPedido.Click += new System.EventHandler(this.btnRegistrarPedido_Click);
+            // 
             // cmbGrupo
             // 
             this.cmbGrupo.FormattingEnabled = true;
             this.cmbGrupo.Items.AddRange(new object[] {
+            "Sin Grupo",
             "1",
             "2",
             "3",
@@ -114,48 +223,20 @@
             "8",
             "9",
             "10"});
-            this.cmbGrupo.Location = new System.Drawing.Point(6, 30);
+            this.cmbGrupo.Location = new System.Drawing.Point(9, 26);
             this.cmbGrupo.Name = "cmbGrupo";
             this.cmbGrupo.Size = new System.Drawing.Size(121, 24);
-            this.cmbGrupo.TabIndex = 0;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 13);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(49, 16);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Grupo";
+            this.cmbGrupo.TabIndex = 5;
             // 
             // btnMostrarGrupo
             // 
-            this.btnMostrarGrupo.Location = new System.Drawing.Point(168, 30);
+            this.btnMostrarGrupo.Location = new System.Drawing.Point(171, 26);
             this.btnMostrarGrupo.Name = "btnMostrarGrupo";
             this.btnMostrarGrupo.Size = new System.Drawing.Size(197, 23);
-            this.btnMostrarGrupo.TabIndex = 2;
-            this.btnMostrarGrupo.Text = "Ver maquinas para pedir";
+            this.btnMostrarGrupo.TabIndex = 7;
+            this.btnMostrarGrupo.Text = "Ver Grupo";
             this.btnMostrarGrupo.UseVisualStyleBackColor = true;
             this.btnMostrarGrupo.Click += new System.EventHandler(this.btnMostrarGrupo_Click);
-            // 
-            // dgvPedidoWeb
-            // 
-            this.dgvPedidoWeb.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvPedidoWeb.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.dgvPedidoWeb.Location = new System.Drawing.Point(5, 102);
-            this.dgvPedidoWeb.Name = "dgvPedidoWeb";
-            this.dgvPedidoWeb.Size = new System.Drawing.Size(1886, 880);
-            this.dgvPedidoWeb.TabIndex = 3;
-            // 
-            // btnRegistrarPedido
-            // 
-            this.btnRegistrarPedido.Location = new System.Drawing.Point(390, 30);
-            this.btnRegistrarPedido.Name = "btnRegistrarPedido";
-            this.btnRegistrarPedido.Size = new System.Drawing.Size(218, 23);
-            this.btnRegistrarPedido.TabIndex = 4;
-            this.btnRegistrarPedido.Text = "Registrar pedido realizado";
-            this.btnRegistrarPedido.UseVisualStyleBackColor = true;
-            this.btnRegistrarPedido.Click += new System.EventHandler(this.btnRegistrarPedido_Click);
             // 
             // tabPage1
             // 
@@ -194,82 +275,19 @@
             this.tabControl1.TabIndex = 2;
             this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
-            // panel1
+            // dgvPedidoWeb
             // 
-            this.panel1.Controls.Add(this.button1);
-            this.panel1.Controls.Add(this.label3);
-            this.panel1.Controls.Add(this.label2);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel1.Location = new System.Drawing.Point(5, 5);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1886, 93);
-            this.panel1.TabIndex = 0;
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(5, 98);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.dgvHistorial);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.dgvTotales);
-            this.splitContainer1.Size = new System.Drawing.Size(1886, 884);
-            this.splitContainer1.SplitterDistance = 628;
-            this.splitContainer1.TabIndex = 1;
-            // 
-            // dgvHistorial
-            // 
-            this.dgvHistorial.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvHistorial.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvHistorial.Location = new System.Drawing.Point(0, 0);
-            this.dgvHistorial.Name = "dgvHistorial";
-            this.dgvHistorial.Size = new System.Drawing.Size(628, 884);
-            this.dgvHistorial.TabIndex = 0;
-            // 
-            // dgvTotales
-            // 
-            this.dgvTotales.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvTotales.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvTotales.Location = new System.Drawing.Point(0, 0);
-            this.dgvTotales.Name = "dgvTotales";
-            this.dgvTotales.Size = new System.Drawing.Size(1254, 884);
-            this.dgvTotales.TabIndex = 0;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.label2.Location = new System.Drawing.Point(3, 60);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(79, 21);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Historico";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(1819, 60);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(64, 21);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "Totales";
-            // 
-            // button1
-            // 
-            this.button1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.button1.Location = new System.Drawing.Point(7, 3);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(91, 33);
-            this.button1.TabIndex = 2;
-            this.button1.Text = "Recargar";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.btnCargarHistorial_Click);
+            this.dgvPedidoWeb.AllowUserToAddRows = false;
+            this.dgvPedidoWeb.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvPedidoWeb.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvPedidoWeb.Location = new System.Drawing.Point(5, 69);
+            this.dgvPedidoWeb.Name = "dgvPedidoWeb";
+            this.dgvPedidoWeb.ReadOnly = true;
+            this.dgvPedidoWeb.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvPedidoWeb.Size = new System.Drawing.Size(1886, 913);
+            this.dgvPedidoWeb.TabIndex = 6;
+            this.dgvPedidoWeb.TabStop = false;
+            this.dgvPedidoWeb.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.AplicarColoresGrupo);
             // 
             // Form1
             // 
@@ -283,20 +301,21 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
             this.tabPage3.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvPedidoWeb)).EndInit();
-            this.tabPage1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvInventario)).EndInit();
-            this.tabControl1.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvHistorial)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTotales)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.tabPage2.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
+            this.tabPage1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvInventario)).EndInit();
+            this.tabControl1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvPedidoWeb)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -307,11 +326,6 @@
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.Button btnRegistrarPedido;
-        private System.Windows.Forms.DataGridView dgvPedidoWeb;
-        private System.Windows.Forms.Button btnMostrarGrupo;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox cmbGrupo;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.DataGridView dgvInventario;
         private System.Windows.Forms.TabControl tabControl1;
@@ -321,6 +335,12 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btnRegistrarPedido;
+        private System.Windows.Forms.ComboBox cmbGrupo;
+        private System.Windows.Forms.Button btnMostrarGrupo;
+        private System.Windows.Forms.DataGridView dgvPedidoWeb;
     }
 }
 
