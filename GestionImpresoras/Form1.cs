@@ -65,24 +65,22 @@ namespace GestionImpresoras
         // ==========================================
         // --- GESTIÓN DE COLORES (TUS CÓDIGOS HEX) ---
         // ==========================================
-
-        // Esta función tiene TUS colores. La usa el Grid Y el Excel a la vez.
         private Color ObtenerColorPorGrupo(string grupo)
         {
             if (string.IsNullOrEmpty(grupo)) return Color.White;
 
             switch (grupo)
             {
-                case "1": return ColorTranslator.FromHtml("#FCE4D6"); // Naranja
-                case "2": return ColorTranslator.FromHtml("#EDEDED"); // Gris
-                case "3": return ColorTranslator.FromHtml("#FFF2CC"); // Oro
-                case "4": return ColorTranslator.FromHtml("#D9E1F2"); // Azul
-                case "5": return ColorTranslator.FromHtml("#E2EFDA"); // Verde
-                case "6": return ColorTranslator.FromHtml("#E1D5E7"); // Lila
-                case "7": return ColorTranslator.FromHtml("#FFC7CE"); // Rosa/Rojo
-                case "8": return ColorTranslator.FromHtml("#B7FAF4"); // Turquesa
-                case "9": return ColorTranslator.FromHtml("#F2DCDB"); // Marrón/Salmón
-                case "10": return ColorTranslator.FromHtml("#FBFFB3"); // Amarillo
+                case "1": return ColorTranslator.FromHtml("#FCE4D6");
+                case "2": return ColorTranslator.FromHtml("#EDEDED");
+                case "3": return ColorTranslator.FromHtml("#FFF2CC");
+                case "4": return ColorTranslator.FromHtml("#D9E1F2");
+                case "5": return ColorTranslator.FromHtml("#E2EFDA");
+                case "6": return ColorTranslator.FromHtml("#E1D5E7");
+                case "7": return ColorTranslator.FromHtml("#FFC7CE");
+                case "8": return ColorTranslator.FromHtml("#B7FAF4");
+                case "9": return ColorTranslator.FromHtml("#F2DCDB");
+                case "10": return ColorTranslator.FromHtml("#FBFFB3");
                 default: return Color.White;
             }
         }
@@ -97,7 +95,7 @@ namespace GestionImpresoras
         }
 
         // ==========================================
-        // --- EXPORTACIÓN A EXCEL (CON TUS COLORES) ---
+        // --- EXPORTACIÓN A EXCEL (PERSONALIZADA) ---
         // ==========================================
 
         private void btnExcel_Click(object sender, EventArgs e)
@@ -107,15 +105,39 @@ namespace GestionImpresoras
             switch (indicePestana)
             {
                 case 0: // Inventario
-                    ExportarAExcel(dgvInventario);
+                    // Nombre fijo para inventario
+                    ExportarAExcel(dgvInventario, "InventarioImpresora");
                     break;
-                case 1: // Solicitar
-                    if (dgvPedidoWeb.Rows.Count > 0) ExportarAExcel(dgvPedidoWeb);
-                    else MessageBox.Show("La tabla de pedidos está vacía.");
+
+                case 1: // Solicitar (Pedidos)
+                    if (dgvPedidoWeb.Rows.Count > 0)
+                    {
+                        // Lógica para el nombre dinámico del grupo
+                        string grupoSeleccionado = cmbGrupo.Text.Trim();
+                        string nombreArchivo;
+
+                        if (grupoSeleccionado.Equals("Sin Grupo", StringComparison.OrdinalIgnoreCase))
+                        {
+                            nombreArchivo = "PedidosGrupoSinGrupo";
+                        }
+                        else
+                        {
+                            // "PedidosGrupo" + el número o nombre del grupo
+                            nombreArchivo = "PedidosGrupo" + grupoSeleccionado;
+                        }
+
+                        ExportarAExcel(dgvPedidoWeb, nombreArchivo);
+                    }
+                    else
+                    {
+                        MessageBox.Show("La tabla de pedidos está vacía.");
+                    }
                     break;
-                case 2: // Historial
+
+                case 2: // Historial / Totales
                     PreguntarYExportarHistorial();
                     break;
+
                 default:
                     MessageBox.Show("No hay tabla para exportar aquí.");
                     break;
@@ -142,17 +164,24 @@ namespace GestionImpresoras
             prompt.Controls.AddRange(new Control[] { lbl, btnHist, btnTot });
 
             DialogResult res = prompt.ShowDialog();
-            if (res == DialogResult.Yes) ExportarAExcel(dgvHistorial);
-            else if (res == DialogResult.No) ExportarAExcel(dgvTotales);
+
+            // Dependiendo de la elección, exportamos el DataGridView correspondiente con un nombre adecuado.
+            if (res == DialogResult.Yes)
+                ExportarAExcel(dgvHistorial, "InventarioImpresorasHistorico");
+            else if (res == DialogResult.No)
+                ExportarAExcel(dgvTotales, "InventarioImpresorasTotalesPedidos");
         }
 
-        private void ExportarAExcel(DataGridView grid)
+        // ESTE MÉTODO SE ENCARGA DE EXPORTAR CUALQUIER DataGridView A EXCEL CON FORMATO PERSONALIZADO
+        private void ExportarAExcel(DataGridView grid, string nombreBase)
         {
             if (grid.Rows.Count == 0) { MessageBox.Show("No hay datos."); return; }
 
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "Excel Workbook|*.xlsx";
-            sfd.FileName = "ListadoImpresoras_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx";
+
+            // Construimos el nombre: NombreBase + "_" + FechaHoraSegundos
+            sfd.FileName = $"{nombreBase}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
             if (sfd.ShowDialog() == DialogResult.OK)
             {
@@ -183,7 +212,7 @@ namespace GestionImpresoras
                                 var celdaExcel = worksheet.Cell(i + 2, j + 1);
                                 celdaExcel.Value = valor;
 
-                                // --- AQUÍ APLICAMOS TUS COLORES AL EXCEL ---
+                                // --- COLORES ---
                                 if (grid.Columns[j].Name == "GRUPO")
                                 {
                                     Color c = ObtenerColorPorGrupo(valor);
@@ -198,9 +227,6 @@ namespace GestionImpresoras
                         worksheet.Columns().AdjustToContents();
                         workbook.SaveAs(sfd.FileName);
                         MessageBox.Show("Exportado correctamente. ✔");
-
-                        // descomentar la siguiente línea si quieres abrir el archivo automáticamente después de guardarlo
-                        //System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(sfd.FileName) { UseShellExecute = true });
                     }
                 }
                 catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
@@ -255,9 +281,37 @@ namespace GestionImpresoras
         {
             string sql = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
             DataTable dt = db.ObtenerDatos(sql);
-            if (dt != null) { dgvInventario.DataSource = dt; dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; }
+
+            if (dt != null)
+            {
+                dgvInventario.DataSource = dt;
+
+               
+
+                // 1. Desactivamos el ajuste automático global para tener control manual
+                dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+
+                // 2. Configuramos columna por columna
+                foreach (DataGridViewColumn col in dgvInventario.Columns)
+                {
+                    if (col.Name == "OBSERVACIONES")
+                    {
+                        // Esta columna ocupará todo el espacio libre restante
+                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                        // Opcional: Establecer un ancho mínimo para que no desaparezca si la pantalla es pequeña
+                        col.MinimumWidth = 100;
+                    }
+                    else
+                    {
+                        // El resto se ajustan exactamente al tamaño de su texto (incluyendo la cabecera)
+                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                    }
+                }
+            }
         }
 
+        // ESTE MÉTODO CARGA LOS DATOS DE LOS TÁMBORES PEDIDOS Y LOS AGRUPA POR IMPRESORA
+        // PARA MOSTRAR UN HISTORIAL DETALLADO Y UN RESUMEN DE PEDIDOS POR MODELO.
         public void CargarHistorial()
         {
             try
@@ -282,6 +336,8 @@ namespace GestionImpresoras
             if (tabControl1.SelectedIndex == 2) CargarHistorial();
         }
 
+        // ESTE MÉTODO SE EJECUTA CUANDO SE TERMINA DE EDITAR UNA FILA EN EL INVENTARIO,
+        // Y SE ENCARGA DE INSERTAR O ACTUALIZAR EN LA BASE DE DATOS SEGÚN CORRESPONDA.
         private void dgvInventario_RowValidated(object sender, DataGridViewCellEventArgs e)
         {
             if (isDeleting || dgvInventario.Rows[e.RowIndex].IsNewRow) return;
@@ -321,6 +377,8 @@ namespace GestionImpresoras
             dgvPedidoWeb.ClearSelection(); dgvPedidoWeb.CurrentCell = null;
         }
 
+        // ESTE MÉTODO REGISTRA LOS PEDIDOS SELECCIONADOS EN LA BASE DE DATOS,
+        // PIDIENDO CONFIRMACIÓN Y EL TIPO (KIT O TAMBOR) SI NO HAY GRUPO ASIGNADO.
         private void btnRegistrarPedido_Click(object sender, EventArgs e)
         {
             if (dgvPedidoWeb.Rows.Count == 0) return;
@@ -361,17 +419,22 @@ namespace GestionImpresoras
             }
         }
 
-        // ==========================================
-        // --- EXTRAS: NUEVO + HISTORIAL ---
-        // ==========================================
-        private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); }
+      
+       
+        private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); } // Botón para recargar el historial manualmente
 
+        // ==========================================
+        // --- NUEVA IMPRESORA (VENTANA EMERGENTE) ---
+        // ==========================================
         private void btnNuevo_Click(object sender, EventArgs e)
         {
             string n = MostrarPromptNuevo();
             if (n != null) { CargarInventario(); MessageBox.Show($"Registrado: {n}"); }
         }
 
+        // ESTE MÉTODO CREA UNA VENTANA EMERGENTE PARA INGRESAR LOS DATOS DE UNA NUEVA
+        // IMPRESORA, CON VALIDACIONES EN TIEMPO REAL PARA LA IP Y VERIFICACIÓN DE SERIE EXISTENTE.
+        // SI TODO ES CORRECTO, INSERTA EN LA BASE DE DATOS Y DEVUELVE EL NÚMERO DE SERIE REGISTRADO.
         private string MostrarPromptNuevo()
         {
             List<string> ips = new List<string>();
