@@ -153,8 +153,8 @@ namespace GestionImpresoras
 
         public void CargarInventario()
         {
-            string sql = @"SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, N_MAQUINA, OBSERVACIONES 
-                           FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC, N_MAQUINA ASC";
+            string sql = @"SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES 
+                           FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
             DataTable dt = db.ObtenerDatos(sql);
             if (dt != null)
             {
@@ -217,13 +217,13 @@ namespace GestionImpresoras
             if (string.IsNullOrEmpty(nSerie)) return;
 
             string sql = @"IF EXISTS (SELECT 1 FROM IMPRESORAS WHERE NSERIE = @ser)
-                           UPDATE IMPRESORAS SET N_MAQUINA=@n, UBICACION=@ubi, MODELO=@mod, IP=@ip, OBSERVACIONES=@obs, GRUPO=@grp WHERE NSERIE=@ser
+                           UPDATE IMPRESORAS SET UBICACION=@ubi, MODELO=@mod, IP=@ip, OBSERVACIONES=@obs, GRUPO=@grp WHERE NSERIE=@ser
                            ELSE
-                           INSERT INTO IMPRESORAS (N_MAQUINA, UBICACION, MODELO, NSERIE, IP, OBSERVACIONES, GRUPO) 
-                           VALUES (@n, @ubi, @mod, @ser, @ip, @obs, @grp)";
+                           INSERT INTO IMPRESORAS (UBICACION, MODELO, NSERIE, IP, OBSERVACIONES, GRUPO) 
+                           VALUES (@ubi, @mod, @ser, @ip, @obs, @grp)";
 
             SqlParameter[] p = {
-                new SqlParameter("@n", fila.Cells["N_MAQUINA"].Value ?? 0),
+                
                 new SqlParameter("@ubi", fila.Cells["UBICACION"].Value ?? ""),
                 new SqlParameter("@mod", fila.Cells["MODELO"].Value ?? ""),
                 new SqlParameter("@ser", nSerie),
@@ -251,11 +251,11 @@ namespace GestionImpresoras
 
             if (cmbGrupo.Text == "Sin Grupo")
             {
-                sql = "SELECT GRUPO, N_MAQUINA, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE (GRUPO IS NULL OR GRUPO = '') ";
+                sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE (GRUPO IS NULL OR GRUPO = '') ";
             }
             else
             {
-                sql = "SELECT GRUPO, N_MAQUINA, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO = @g AND MODELO LIKE '%4510%'";
+                sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO = @g AND MODELO LIKE '%4510%'";
                 p = new SqlParameter[] { new SqlParameter("@g", cmbGrupo.Text) };
             }
 
@@ -391,9 +391,7 @@ namespace GestionImpresoras
             };
 
             // --- CONTROLES ---
-            Label lblNum = new Label() { Left = 20, Top = 20, Text = "Nº Máquina (0-255):", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            NumericUpDown txtNum = new NumericUpDown() { Left = 20, Top = 40, Width = 380, Maximum = 255, TextAlign = HorizontalAlignment.Right };
-
+            
             Label lblUbi = new Label() { Left = 20, Top = 80, Text = "Ubicación:", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
             TextBox txtUbi = new TextBox() { Left = 20, Top = 100, Width = 380, MaxLength = 50, CharacterCasing = CharacterCasing.Upper };
 
@@ -418,7 +416,7 @@ namespace GestionImpresoras
             Button btnGuardar = new Button() { Text = "Guardar", Left = 200, Width = 90, Top = 480, BackColor = Color.LightGreen, Height = 35 };
             Button btnCancel = new Button() { Text = "Cancelar", Left = 310, Width = 90, Top = 480, DialogResult = DialogResult.Cancel, Height = 35 };
 
-            prompt.Controls.AddRange(new Control[] { lblNum, txtNum, lblUbi, txtUbi, lblMod, txtMod, lblSer, txtSer, lblIp, txtIp, lblAvisoIp, lblObs, txtObs, lblGrp, txtGrp, btnGuardar, btnCancel });
+            prompt.Controls.AddRange(new Control[] { lblUbi, txtUbi, lblMod, txtMod, lblSer, txtSer, lblIp, txtIp, lblAvisoIp, lblObs, txtObs, lblGrp, txtGrp, btnGuardar, btnCancel });
             prompt.AcceptButton = btnGuardar;
             prompt.CancelButton = btnCancel;
 
@@ -497,9 +495,9 @@ namespace GestionImpresoras
                 }
 
                 // 5. Guardar
-                string sqlInsert = @"INSERT INTO IMPRESORAS (N_MAQUINA, UBICACION, MODELO, NSERIE, IP, OBSERVACIONES, GRUPO) VALUES (@n, @u, @m, @s, @i, @o, @g)";
+                string sqlInsert = @"INSERT INTO IMPRESORAS (UBICACION, MODELO, NSERIE, IP, OBSERVACIONES, GRUPO) VALUES (@u, @m, @s, @i, @o, @g)";
                 SqlParameter[] p = {
-                    new SqlParameter("@n", (byte)txtNum.Value),
+                    
                     new SqlParameter("@u", ubicacion),
                     new SqlParameter("@m", modelo),
                     new SqlParameter("@s", nserie),
