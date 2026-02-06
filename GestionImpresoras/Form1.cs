@@ -383,44 +383,66 @@ namespace GestionImpresoras
         {
             if (dgvPedidoWeb.Rows.Count == 0) return;
 
+            // 1. Detectamos qué filas procesar (las seleccionadas o todas las visibles)
             List<DataGridViewRow> filas = dgvPedidoWeb.SelectedRows.Count > 0
                 ? dgvPedidoWeb.SelectedRows.Cast<DataGridViewRow>().ToList()
-                : dgvPedidoWeb.Rows.Cast<DataGridViewRow>().Where(r => !r.IsNewRow && r.Cells["NSERIE"].Value != null).ToList();
+                : dgvPedidoWeb.Rows.Cast<DataGridViewRow>().Where(re => !re.IsNewRow && re.Cells["NSERIE"].Value != null).ToList();
 
-            string tipo = "TAMBOR";
-            if (cmbGrupo.Text.Equals("Sin Grupo", StringComparison.OrdinalIgnoreCase))
+            if (filas.Count == 0) return;
+
+            // 2. SIEMPRE preguntamos si es KIT o TAMBOR 
+            string tipo = "";
+
+            Form p = new Form()
             {
-                Form p = new Form() { Width = 300, Height = 150, Text = "Elegir", StartPosition = FormStartPosition.CenterParent };
-                Button bK = new Button() { Text = "KIT", Left = 40, Top = 40, DialogResult = DialogResult.Yes };
-                Button bT = new Button() { Text = "TAMBOR", Left = 160, Top = 40, DialogResult = DialogResult.No };
-                p.Controls.AddRange(new Control[] { bK, bT });
-                DialogResult r = p.ShowDialog();
-                if (r == DialogResult.Yes) tipo = "KIT"; else if (r == DialogResult.No) tipo = "TAMBOR"; else return;
-            }
+                Width = 300,
+                Height = 160,
+                Text = "Seleccionar Tipo",
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false
+            };
 
-            if (MessageBox.Show($"¿Registrar {filas.Count} pedidos de '{tipo}'?", "Confirmar", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            Label lbl = new Label() { Left = 20, Top = 15, Width = 250, Text = "¿Qué consumible deseas solicitar?" };
+            Button bK = new Button() { Text = "KIT", Left = 40, Top = 50, Width = 90, Height = 35, DialogResult = DialogResult.Yes, BackColor = Color.LightYellow };
+            Button bT = new Button() { Text = "TAMBOR", Left = 150, Top = 50, Width = 90, Height = 35, DialogResult = DialogResult.No, BackColor = Color.LightCyan };
+
+            p.Controls.AddRange(new Control[] { lbl, bK, bT });
+
+            DialogResult r = p.ShowDialog();
+
+            if (r == DialogResult.Yes) tipo = "KIT";
+            else if (r == DialogResult.No) tipo = "TAMBOR";
+            else return; // Si cierra la ventana sin elegir, cancelamos todo
+
+            // 3. Confirmación final y Guardado
+            if (MessageBox.Show($"¿Registrar {filas.Count} pedidos de '{tipo}'?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 try
                 {
                     foreach (DataGridViewRow f in filas)
                     {
                         string sql = "INSERT INTO TAMBORES (MODELO, NSERIE, UBICACION, DESCRIPCION, FECHA) VALUES (@m, @s, @u, @d, GETDATE())";
-                        SqlParameter[] p = {
-                            new SqlParameter("@m", f.Cells["MODELO"].Value?.ToString() ?? ""),
-                            new SqlParameter("@s", f.Cells["NSERIE"].Value.ToString()),
-                            new SqlParameter("@u", f.Cells["UBICACION"].Value?.ToString() ?? ""),
-                            new SqlParameter("@d", tipo)
-                        };
-                        db.EjecutarComando(sql, p);
+                        SqlParameter[] param = {
+                    new SqlParameter("@m", f.Cells["MODELO"].Value?.ToString() ?? ""),
+                    new SqlParameter("@s", f.Cells["NSERIE"].Value.ToString()),
+                    new SqlParameter("@u", f.Cells["UBICACION"].Value?.ToString() ?? ""),
+                    new SqlParameter("@d", tipo)
+                };
+                        db.EjecutarComando(sql, param);
                     }
-                    CargarHistorial(); dgvPedidoWeb.DataSource = null; MessageBox.Show("Hecho.");
+
+                    CargarHistorial();
+                    dgvPedidoWeb.DataSource = null; // Limpiamos para indicar que se ha procesado
+                    MessageBox.Show("Pedidos registrados correctamente.");
                 }
                 catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
             }
         }
 
-      
-       
+
+
         private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); } // Botón para recargar el historial manualmente
 
         // ==========================================
