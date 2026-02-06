@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="GestionImpresoras/GestionImpresoras.csproj" Id="28e6c550-2483-48f6-adf2-82a3357e1a7d" />
-  <Project Path="prueba/prueba.vdproj" Type="Installer">
+  <Project Path="Gestión-Impresoras/Gestión-Impresoras.vdproj" Type="Installer">
     <Build />
   </Project>
 </Solution>

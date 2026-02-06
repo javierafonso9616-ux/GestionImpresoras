@@ -220,7 +220,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Location = new System.Drawing.Point(6, 12);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(49, 16);
             this.label1.TabIndex = 6;
@@ -253,7 +253,7 @@
             "8",
             "9",
             "10"});
-            this.cmbGrupo.Location = new System.Drawing.Point(9, 26);
+            this.cmbGrupo.Location = new System.Drawing.Point(9, 33);
             this.cmbGrupo.Name = "cmbGrupo";
             this.cmbGrupo.Size = new System.Drawing.Size(121, 24);
             this.cmbGrupo.TabIndex = 5;
