@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using ClosedXML.Excel;
 
 namespace GestionImpresoras
 {
@@ -62,6 +63,7 @@ namespace GestionImpresoras
         {
             CargarInventario();
             CargarHistorial();
+            this.ActiveControl = btnNuevo; // Foco inicial en el botón de nueva impresora
         }
 
         // ==========================================
@@ -255,7 +257,7 @@ namespace GestionImpresoras
             }
             else
             {
-                sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO = @g AND MODELO LIKE '%4510%'";
+                sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO = @g ";
                 p = new SqlParameter[] { new SqlParameter("@g", cmbGrupo.Text) };
             }
 
@@ -363,6 +365,75 @@ namespace GestionImpresoras
                 MessageBox.Show($"La impresora {nuevaImpresora} se ha registrado correctamente.");
             }
         }
+
+        // ==========================================
+        // --- EXPORTAR A EXCEL  ---
+        // ==========================================
+        private void ExportarAExcel(DataGridView grid)
+        {
+            if (grid.Rows.Count == 0)
+            {
+                MessageBox.Show("No hay datos para exportar.", "Atención", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "Excel Workbook|*.xlsx";
+            sfd.FileName = "ListadoImpresoras_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".xlsx";
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    using (var workbook = new XLWorkbook())
+                    {
+                        // Crear hoja
+                        var worksheet = workbook.Worksheets.Add("Datos");
+
+                        // 1. Cabeceras (en Negrita y Fondo Gris)
+                        for (int i = 0; i < grid.Columns.Count; i++)
+                        {
+                            // Ajustamos índice +1 porque Excel empieza en columna 1, no 0
+                            var celda = worksheet.Cell(1, i + 1);
+                            celda.Value = grid.Columns[i].HeaderText;
+                            celda.Style.Font.Bold = true;
+                            celda.Style.Fill.BackgroundColor = XLColor.LightGray;
+                            celda.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        }
+
+                        // 2. Datos
+                        for (int i = 0; i < grid.Rows.Count; i++)
+                        {
+                            // Saltamos la fila nueva si existe
+                            if (grid.Rows[i].IsNewRow) continue;
+
+                            for (int j = 0; j < grid.Columns.Count; j++)
+                            {
+                                var valor = grid.Rows[i].Cells[j].Value;
+                                // Escribimos el valor (o vacío si es null)
+                                worksheet.Cell(i + 2, j + 1).Value = valor?.ToString() ?? "";
+                            }
+                        }
+
+                        // 3. Ajuste automático de columnas para que se lea bien
+                        worksheet.Columns().AdjustToContents();
+
+                        // Guardar
+                        workbook.SaveAs(sfd.FileName);
+                        MessageBox.Show("Exportación exitosa.", "Excel", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        // Opcional: Abrir el archivo automáticamente
+                        //System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(sfd.FileName) { UseShellExecute = true });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al exportar: " + ex.Message);
+                }
+            }
+        }
+
+
 
         // ==========================================
         // --- FORMULARIO DE NUEVA IMPRESORA ---
@@ -516,6 +587,104 @@ namespace GestionImpresoras
 
             if (prompt.ShowDialog() == DialogResult.OK) return txtSer.Text.ToUpper();
             return null;
+        }
+
+        private void btnExcel_Click(object sender, EventArgs e)
+        {
+            // Averiguamos en qué pestaña está el usuario ahora mismo
+            int indicePestana = tabControl1.SelectedIndex;
+
+            switch (indicePestana)
+            {
+                case 0: // Pestaña INVENTARIO
+                    ExportarAExcel(dgvInventario);
+                    break;
+
+                case 1: // Pestaña SOLICITAR (Pedido Web)
+                        // Preguntamos si quiere exportar lo que ve (aunque esté vacío)
+                    if (dgvPedidoWeb.Rows.Count > 0)
+                    {
+                        ExportarAExcel(dgvPedidoWeb);
+                    }
+                    else
+                    {
+                        MessageBox.Show("La tabla de pedidos está vacía. Selecciona un grupo primero.", "Nada que exportar");
+                    }
+                    break;
+
+                case 2: // Pestaña HISTORIAL (Tiene 2 tablas)
+                        // Aquí lanzamos la pregunta
+                    PreguntarYExportarHistorial();
+                    break;
+
+                default:
+                    MessageBox.Show("No hay ninguna tabla configurada para esta pestaña.");
+                    break;
+            }
+        }
+        private void PreguntarYExportarHistorial()
+        {
+            // 1. Crear ventanita (Aumentamos Height a 250 para que sobre sitio)
+            Form prompt = new Form()
+            {
+                Width = 400, // Un poco más ancha también por si acaso
+                Height = 250,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                Text = "¿Qué tabla deseas exportar?",
+                StartPosition = FormStartPosition.CenterParent,
+                MaximizeBox = false,
+                MinimizeBox = false
+            };
+
+            // Aumentamos el Height del label para que quepan bien las dos líneas
+            Label lblInfo = new Label()
+            {
+                Left = 20,
+                Top = 20,
+                Width = 350,
+                Height = 50, // Espacio suficiente para dos o tres líneas de texto
+                Text = "Selecciona cuál quieres convertir a Excel:",
+                Font = new Font("Segoe UI", 9, FontStyle.Regular)
+            };
+
+            // Bajamos los botones (Top 80 y Top 130) para separarlos del texto
+            Button btnHist = new Button()
+            {
+                Text = "Histórico",
+                Left = 40,
+                Width = 300,
+                Top = 80,
+                Height = 35,
+                DialogResult = DialogResult.Yes,
+                BackColor = Color.AliceBlue
+            };
+
+            Button btnTot = new Button()
+            {
+                Text = "Pedidos Totales",
+                Left = 40,
+                Width = 300,
+                Top = 130,
+                Height = 35,
+                DialogResult = DialogResult.No,
+                BackColor = Color.AliceBlue
+            };
+
+            prompt.Controls.Add(lblInfo);
+            prompt.Controls.Add(btnHist);
+            prompt.Controls.Add(btnTot);
+
+            // 2. Mostrar y evaluar respuesta
+            DialogResult respuesta = prompt.ShowDialog();
+
+            if (respuesta == DialogResult.Yes)
+            {
+                ExportarAExcel(dgvHistorial);
+            }
+            else if (respuesta == DialogResult.No)
+            {
+                ExportarAExcel(dgvTotales);
+            }
         }
     }
 }

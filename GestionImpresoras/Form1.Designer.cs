@@ -51,6 +51,10 @@
             this.btnNuevo = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.button2 = new System.Windows.Forms.Button();
+            this.btnExcel = new System.Windows.Forms.Button();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.tabPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -129,6 +133,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.button4);
             this.panel1.Controls.Add(this.button1);
             this.panel1.Controls.Add(this.label3);
             this.panel1.Controls.Add(this.label2);
@@ -142,9 +147,9 @@
             // 
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.button1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.button1.Location = new System.Drawing.Point(7, 3);
+            this.button1.Location = new System.Drawing.Point(3, 3);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(91, 42);
+            this.button1.Size = new System.Drawing.Size(90, 45);
             this.button1.TabIndex = 2;
             this.button1.Text = "Recargar";
             this.button1.UseVisualStyleBackColor = true;
@@ -154,7 +159,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(1744, 60);
+            this.label3.Location = new System.Drawing.Point(1758, 67);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(129, 21);
             this.label3.TabIndex = 1;
@@ -164,7 +169,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.label2.Location = new System.Drawing.Point(3, 60);
+            this.label2.Location = new System.Drawing.Point(-1, 68);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(79, 21);
             this.label2.TabIndex = 0;
@@ -199,6 +204,7 @@
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.button3);
             this.panel2.Controls.Add(this.label1);
             this.panel2.Controls.Add(this.btnRegistrarPedido);
             this.panel2.Controls.Add(this.cmbGrupo);
@@ -223,9 +229,9 @@
             // btnRegistrarPedido
             // 
             this.btnRegistrarPedido.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnRegistrarPedido.Location = new System.Drawing.Point(268, 17);
+            this.btnRegistrarPedido.Location = new System.Drawing.Point(250, 12);
             this.btnRegistrarPedido.Name = "btnRegistrarPedido";
-            this.btnRegistrarPedido.Size = new System.Drawing.Size(137, 40);
+            this.btnRegistrarPedido.Size = new System.Drawing.Size(137, 45);
             this.btnRegistrarPedido.TabIndex = 8;
             this.btnRegistrarPedido.Text = "Registrar Pedido";
             this.btnRegistrarPedido.UseVisualStyleBackColor = true;
@@ -255,9 +261,9 @@
             // btnMostrarGrupo
             // 
             this.btnMostrarGrupo.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnMostrarGrupo.Location = new System.Drawing.Point(157, 17);
+            this.btnMostrarGrupo.Location = new System.Drawing.Point(154, 12);
             this.btnMostrarGrupo.Name = "btnMostrarGrupo";
-            this.btnMostrarGrupo.Size = new System.Drawing.Size(91, 40);
+            this.btnMostrarGrupo.Size = new System.Drawing.Size(90, 45);
             this.btnMostrarGrupo.TabIndex = 7;
             this.btnMostrarGrupo.Text = "Mostrar";
             this.btnMostrarGrupo.UseVisualStyleBackColor = true;
@@ -287,6 +293,8 @@
             // 
             // panel3
             // 
+            this.panel3.Controls.Add(this.btnExcel);
+            this.panel3.Controls.Add(this.button2);
             this.panel3.Controls.Add(this.btnNuevo);
             this.panel3.Controls.Add(this.pictureBox1);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
@@ -301,7 +309,7 @@
             this.btnNuevo.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnNuevo.Location = new System.Drawing.Point(11, 9);
             this.btnNuevo.Name = "btnNuevo";
-            this.btnNuevo.Size = new System.Drawing.Size(75, 44);
+            this.btnNuevo.Size = new System.Drawing.Size(90, 45);
             this.btnNuevo.TabIndex = 1;
             this.btnNuevo.Text = "Nuevo";
             this.btnNuevo.UseVisualStyleBackColor = true;
@@ -333,6 +341,54 @@
             this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.FillToRight;
             this.tabControl1.TabIndex = 2;
             this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
+            // 
+            // button2
+            // 
+            this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button2.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.button2.Location = new System.Drawing.Point(107, 9);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(90, 45);
+            this.button2.TabIndex = 3;
+            this.button2.Text = "Recargar";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.Form1_Load);
+            // 
+            // btnExcel
+            // 
+            this.btnExcel.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnExcel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnExcel.Location = new System.Drawing.Point(203, 9);
+            this.btnExcel.Name = "btnExcel";
+            this.btnExcel.Size = new System.Drawing.Size(90, 45);
+            this.btnExcel.TabIndex = 4;
+            this.btnExcel.Text = "Exportar";
+            this.btnExcel.UseVisualStyleBackColor = true;
+            this.btnExcel.Click += new System.EventHandler(this.btnExcel_Click);
+            // 
+            // button3
+            // 
+            this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button3.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button3.Location = new System.Drawing.Point(393, 12);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(90, 45);
+            this.button3.TabIndex = 9;
+            this.button3.Text = "Exportar";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.btnExcel_Click);
+            // 
+            // button4
+            // 
+            this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button4.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button4.Location = new System.Drawing.Point(99, 3);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(90, 45);
+            this.button4.TabIndex = 5;
+            this.button4.Text = "Exportar";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.btnExcel_Click);
             // 
             // Form1
             // 
@@ -392,6 +448,10 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Button btnNuevo;
         private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button btnExcel;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button button4;
     }
 }
 
