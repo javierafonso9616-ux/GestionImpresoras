@@ -1,4 +1,5 @@
-﻿using GestionImpresoras.DatosImpresoras;
+﻿using ClosedXML.Excel;
+using GestionImpresoras.DatosImpresoras;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -6,7 +7,6 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using ClosedXML.Excel; // Necesario para el Excel
 
 namespace GestionImpresoras
 {
@@ -18,6 +18,7 @@ namespace GestionImpresoras
         public Form1()
         {
             InitializeComponent();
+            this.WindowState = FormWindowState.Maximized;
             ConfigurarGrids();
         }
 
@@ -60,6 +61,8 @@ namespace GestionImpresoras
         {
             CargarInventario();
             CargarHistorial();
+            // Limpiamos los buscadores por si acaso
+            txtBuscarInventario.Text = "";
         }
 
         // ==========================================
@@ -105,26 +108,16 @@ namespace GestionImpresoras
             switch (indicePestana)
             {
                 case 0: // Inventario
-                    // Nombre fijo para inventario
                     ExportarAExcel(dgvInventario, "InventarioImpresora");
                     break;
 
                 case 1: // Solicitar (Pedidos)
                     if (dgvPedidoWeb.Rows.Count > 0)
                     {
-                        // Lógica para el nombre dinámico del grupo
                         string grupoSeleccionado = cmbGrupo.Text.Trim();
-                        string nombreArchivo;
-
-                        if (grupoSeleccionado.Equals("Sin Grupo", StringComparison.OrdinalIgnoreCase))
-                        {
-                            nombreArchivo = "PedidosGrupoSinGrupo";
-                        }
-                        else
-                        {
-                            // "PedidosGrupo" + el número o nombre del grupo
-                            nombreArchivo = "PedidosGrupo" + grupoSeleccionado;
-                        }
+                        string nombreArchivo = grupoSeleccionado.Equals("Sin Grupo", StringComparison.OrdinalIgnoreCase)
+                            ? "PedidosGrupoSinGrupo"
+                            : "PedidosGrupo" + grupoSeleccionado;
 
                         ExportarAExcel(dgvPedidoWeb, nombreArchivo);
                     }
@@ -142,6 +135,11 @@ namespace GestionImpresoras
                     MessageBox.Show("No hay tabla para exportar aquí.");
                     break;
             }
+
+            // Limpiamos los buscadores por si acaso
+            txtBuscarSerie.Text = "";
+            txtBuscarInventario.Text = "";
+            txtBuscarHistorial.Text = "";
         }
 
         private void PreguntarYExportarHistorial()
@@ -165,22 +163,18 @@ namespace GestionImpresoras
 
             DialogResult res = prompt.ShowDialog();
 
-            // Dependiendo de la elección, exportamos el DataGridView correspondiente con un nombre adecuado.
             if (res == DialogResult.Yes)
                 ExportarAExcel(dgvHistorial, "InventarioImpresorasHistorico");
             else if (res == DialogResult.No)
                 ExportarAExcel(dgvTotales, "InventarioImpresorasTotalesPedidos");
         }
 
-        // ESTE MÉTODO SE ENCARGA DE EXPORTAR CUALQUIER DataGridView A EXCEL CON FORMATO PERSONALIZADO
         private void ExportarAExcel(DataGridView grid, string nombreBase)
         {
-            if (grid.Rows.Count == 0) { MessageBox.Show("No hay datos."); return; }
+            if (grid.Rows.Count == 0) { MessageBox.Show("No hay datos para exportar."); return; }
 
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "Excel Workbook|*.xlsx";
-
-            // Construimos el nombre: NombreBase + "_" + FechaHoraSegundos
             sfd.FileName = $"{nombreBase}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
             if (sfd.ShowDialog() == DialogResult.OK)
@@ -191,7 +185,6 @@ namespace GestionImpresoras
                     {
                         var worksheet = workbook.Worksheets.Add("Datos");
 
-                        // 1. Cabeceras
                         for (int i = 0; i < grid.Columns.Count; i++)
                         {
                             var celda = worksheet.Cell(1, i + 1);
@@ -201,7 +194,6 @@ namespace GestionImpresoras
                             celda.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                         }
 
-                        // 2. Datos y COLORES
                         for (int i = 0; i < grid.Rows.Count; i++)
                         {
                             if (grid.Rows[i].IsNewRow) continue;
@@ -212,7 +204,6 @@ namespace GestionImpresoras
                                 var celdaExcel = worksheet.Cell(i + 2, j + 1);
                                 celdaExcel.Value = valor;
 
-                                // --- COLORES ---
                                 if (grid.Columns[j].Name == "GRUPO")
                                 {
                                     Color c = ObtenerColorPorGrupo(valor);
@@ -233,7 +224,6 @@ namespace GestionImpresoras
             }
         }
 
-
         // ==========================================
         // --- BORRADO (SUPR) ---
         // ==========================================
@@ -245,7 +235,7 @@ namespace GestionImpresoras
                 int seleccionados = grid.SelectedRows.Count;
                 if (seleccionados == 0) return;
 
-                isDeleting = true; // Bloqueamos guardado
+                isDeleting = true;
                 string msg = seleccionados == 1 ? "¿Borrar registro?" : $"¿Borrar {seleccionados} registros?";
 
                 if (MessageBox.Show(msg, "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
@@ -258,11 +248,19 @@ namespace GestionImpresoras
                             string nSerie = fila.Cells["NSERIE"].Value?.ToString();
 
                             if (grid.Name == "dgvInventario")
+                            {
                                 db.EjecutarComando("DELETE FROM IMPRESORAS WHERE NSERIE = @s", new SqlParameter[] { new SqlParameter("@s", nSerie) });
+                            }
                             else if (grid.Name == "dgvHistorial")
                             {
                                 DateTime f = Convert.ToDateTime(fila.Cells["FECHA"].Value);
-                                db.EjecutarComando("DELETE FROM TAMBORES WHERE NSERIE = @s AND FECHA = @f", new SqlParameter[] { new SqlParameter("@s", nSerie), new SqlParameter("@f", f) });
+                                string descripcion = fila.Cells["DESCRIPCION"].Value?.ToString().ToUpper() ?? "";
+
+                                // Averiguamos de qué tabla borrar basándonos en la descripción
+                                string tablaBorrado = descripcion.Contains("KIT") ? "KIT_MANTENIMIENTO" : "TAMBORES";
+
+                                db.EjecutarComando($"DELETE FROM {tablaBorrado} WHERE NSERIE = @s AND FECHA = @f",
+                                    new SqlParameter[] { new SqlParameter("@s", nSerie), new SqlParameter("@f", f) });
                             }
                         }
                         CargarInventario();
@@ -270,7 +268,7 @@ namespace GestionImpresoras
                     }
                     catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
                 }
-                isDeleting = false; // Desbloqueamos
+                isDeleting = false;
             }
         }
 
@@ -285,42 +283,58 @@ namespace GestionImpresoras
             if (dt != null)
             {
                 dgvInventario.DataSource = dt;
-
-               
-
-                // 1. Desactivamos el ajuste automático global para tener control manual
                 dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
 
-                // 2. Configuramos columna por columna
                 foreach (DataGridViewColumn col in dgvInventario.Columns)
                 {
                     if (col.Name == "OBSERVACIONES")
                     {
-                        // Esta columna ocupará todo el espacio libre restante
                         col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                        // Opcional: Establecer un ancho mínimo para que no desaparezca si la pantalla es pequeña
                         col.MinimumWidth = 100;
                     }
                     else
                     {
-                        // El resto se ajustan exactamente al tamaño de su texto (incluyendo la cabecera)
                         col.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                     }
                 }
             }
         }
 
-        // ESTE MÉTODO CARGA LOS DATOS DE LOS TÁMBORES PEDIDOS Y LOS AGRUPA POR IMPRESORA
-        // PARA MOSTRAR UN HISTORIAL DETALLADO Y UN RESUMEN DE PEDIDOS POR MODELO.
         public void CargarHistorial()
         {
             try
             {
-                string sqlH = "SELECT I.GRUPO, T.FECHA, T.NSERIE, T.MODELO, T.UBICACION, T.DESCRIPCION FROM TAMBORES T LEFT JOIN IMPRESORAS I ON T.NSERIE = I.NSERIE ORDER BY T.FECHA DESC";
+                // Unimos TAMBORES y KIT_MANTENIMIENTO para el historial detallado
+                string sqlH = @"
+                    SELECT I.GRUPO, H.FECHA, H.NSERIE, H.MODELO, H.UBICACION, H.DESCRIPCION 
+                    FROM (
+                        SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM TAMBORES
+                        UNION ALL
+                        SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM KIT_MANTENIMIENTO
+                    ) H 
+                    LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+                    ORDER BY H.FECHA DESC";
                 dgvHistorial.DataSource = db.ObtenerDatos(sqlH);
 
-                string sqlT = "SELECT I.GRUPO, T.NSERIE, T.MODELO, COUNT(*) as [Total Pedidos], MAX(T.FECHA) as [Último] FROM TAMBORES T LEFT JOIN IMPRESORAS I ON T.NSERIE = I.NSERIE GROUP BY I.GRUPO, T.NSERIE, T.MODELO ORDER BY I.GRUPO ASC, [Total Pedidos] DESC";
+                // SQL MODIFICADO: Separamos fechas y totales
+                string sqlT = @"
+                    SELECT I.GRUPO, H.NSERIE, H.MODELO, 
+                           SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [Total Tambores],
+                           MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [Último Tambor],
+                           SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [Total Kits],
+                           MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [Último Kit]
+                    FROM (
+                        SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
+                        UNION ALL
+                        SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
+                    ) H 
+                    LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+                    GROUP BY I.GRUPO, H.NSERIE, H.MODELO 
+                    ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
                 dgvTotales.DataSource = db.ObtenerDatos(sqlT);
+
+                // Limpiamos los buscadores por si acaso
+                txtBuscarHistorial.Text = "";
 
                 dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -336,8 +350,6 @@ namespace GestionImpresoras
             if (tabControl1.SelectedIndex == 2) CargarHistorial();
         }
 
-        // ESTE MÉTODO SE EJECUTA CUANDO SE TERMINA DE EDITAR UNA FILA EN EL INVENTARIO,
-        // Y SE ENCARGA DE INSERTAR O ACTUALIZAR EN LA BASE DE DATOS SEGÚN CORRESPONDA.
         private void dgvInventario_RowValidated(object sender, DataGridViewCellEventArgs e)
         {
             if (isDeleting || dgvInventario.Rows[e.RowIndex].IsNewRow) return;
@@ -367,6 +379,9 @@ namespace GestionImpresoras
         // ==========================================
         private void btnMostrarGrupo_Click(object sender, EventArgs e)
         {
+            // Limpiamos el buscador por si acaso
+            txtBuscarSerie.Text = "";
+
             if (string.IsNullOrEmpty(cmbGrupo.Text)) { MessageBox.Show("Seleccione un grupo para mostrar."); return; }
             string sql; SqlParameter[] p = null;
 
@@ -377,22 +392,17 @@ namespace GestionImpresoras
             dgvPedidoWeb.ClearSelection(); dgvPedidoWeb.CurrentCell = null;
         }
 
-        // ESTE MÉTODO REGISTRA LOS PEDIDOS SELECCIONADOS EN LA BASE DE DATOS,
-        // PIDIENDO CONFIRMACIÓN Y EL TIPO (KIT O TAMBOR) SI NO HAY GRUPO ASIGNADO.
         private void btnRegistrarPedido_Click(object sender, EventArgs e)
         {
             if (dgvPedidoWeb.Rows.Count == 0) return;
 
-            // 1. Detectamos qué filas procesar (las seleccionadas o todas las visibles)
             List<DataGridViewRow> filas = dgvPedidoWeb.SelectedRows.Count > 0
                 ? dgvPedidoWeb.SelectedRows.Cast<DataGridViewRow>().ToList()
                 : dgvPedidoWeb.Rows.Cast<DataGridViewRow>().Where(re => !re.IsNewRow && re.Cells["NSERIE"].Value != null).ToList();
 
             if (filas.Count == 0) return;
 
-            // 2. SIEMPRE preguntamos si es KIT o TAMBOR 
             string tipo = "";
-
             Form p = new Form()
             {
                 Width = 300,
@@ -414,49 +424,54 @@ namespace GestionImpresoras
 
             if (r == DialogResult.Yes) tipo = "KIT";
             else if (r == DialogResult.No) tipo = "TAMBOR";
-            else return; // Si cierra la ventana sin elegir, cancelamos todo
+            else return;
 
-            // 3. Confirmación final y Guardado
             if (MessageBox.Show($"¿Registrar {filas.Count} pedidos de '{tipo}'?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 try
                 {
+                    // Elegimos la tabla según el botón que ha pulsado
+                    string tablaDestino = tipo == "KIT" ? "KIT_MANTENIMIENTO" : "TAMBORES";
+
+                    // Lo ponemos en MAYÚSCULAS para la columna Descripción
+                    string nombreConsumible = tipo == "KIT" ? "KIT_MANTENIMIENTO" : "TAMBORES";
+
                     foreach (DataGridViewRow f in filas)
                     {
-                        string sql = "INSERT INTO TAMBORES (MODELO, NSERIE, UBICACION, DESCRIPCION, FECHA) VALUES (@m, @s, @u, @d, GETDATE())";
+                        string sql = $"INSERT INTO {tablaDestino} (MODELO, NSERIE, UBICACION, DESCRIPCION, FECHA) VALUES (@m, @s, @u, @d, GETDATE())";
                         SqlParameter[] param = {
                     new SqlParameter("@m", f.Cells["MODELO"].Value?.ToString() ?? ""),
                     new SqlParameter("@s", f.Cells["NSERIE"].Value.ToString()),
                     new SqlParameter("@u", f.Cells["UBICACION"].Value?.ToString() ?? ""),
-                    new SqlParameter("@d", tipo)
+                    new SqlParameter("@d", nombreConsumible)
                 };
                         db.EjecutarComando(sql, param);
                     }
 
                     CargarHistorial();
-                    dgvPedidoWeb.DataSource = null; // Limpiamos para indicar que se ha procesado
+                    dgvPedidoWeb.DataSource = null;
                     MessageBox.Show("Pedidos registrados correctamente.");
                 }
                 catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
             }
+
+            // Limpiamos el buscador por si acaso
+            txtBuscarSerie.Text = "";
         }
 
-
-
-        private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); } // Botón para recargar el historial manualmente
+        private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); }
 
         // ==========================================
-        // --- NUEVA IMPRESORA (VENTANA EMERGENTE) ---
+        // --- NUEVA IMPRESORA ---
         // ==========================================
         private void btnNuevo_Click(object sender, EventArgs e)
         {
+            // Limpiamos los buscadores por si acaso
+            txtBuscarInventario.Text = "";
             string n = MostrarPromptNuevo();
             if (n != null) { CargarInventario(); MessageBox.Show($"Registrado: {n}"); }
         }
 
-        // ESTE MÉTODO CREA UNA VENTANA EMERGENTE PARA INGRESAR LOS DATOS DE UNA NUEVA
-        // IMPRESORA, CON VALIDACIONES EN TIEMPO REAL PARA LA IP Y VERIFICACIÓN DE SERIE EXISTENTE.
-        // SI TODO ES CORRECTO, INSERTA EN LA BASE DE DATOS Y DEVUELVE EL NÚMERO DE SERIE REGISTRADO.
         private string MostrarPromptNuevo()
         {
             List<string> ips = new List<string>();
@@ -512,6 +527,100 @@ namespace GestionImpresoras
 
             if (p.ShowDialog() == DialogResult.OK) return tSe.Text.ToUpper();
             return null;
+        }
+
+        private void txtBuscarSerie_TextChanged(object sender, EventArgs e)
+        {
+            string serieABuscar = txtBuscarSerie.Text.Trim();
+
+            if (string.IsNullOrEmpty(serieABuscar))
+            {
+                dgvPedidoWeb.DataSource = null;
+                return;
+            }
+
+            string sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE NSERIE LIKE @s";
+            SqlParameter[] p = { new SqlParameter("@s", "%" + serieABuscar + "%") };
+
+            DataTable dt = db.ObtenerDatos(sql, p);
+
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                dgvPedidoWeb.DataSource = dt;
+                dgvPedidoWeb.ClearSelection();
+                dgvPedidoWeb.CurrentCell = null;
+            }
+            else
+            {
+                dgvPedidoWeb.DataSource = null;
+            }
+        }
+
+        private void txtBuscarInventario_TextChanged(object sender, EventArgs e)
+        {
+            string serieABuscar = txtBuscarInventario.Text.Trim();
+
+            if (string.IsNullOrEmpty(serieABuscar))
+            {
+                CargarInventario(); // Si borra el texto, carga todo
+                return;
+            }
+
+            string sqlInv = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS WHERE NSERIE LIKE @s ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
+            DataTable dtInv = db.ObtenerDatos(sqlInv, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
+
+            if (dtInv != null)
+            {
+                dgvInventario.DataSource = dtInv;
+                dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+                foreach (DataGridViewColumn col in dgvInventario.Columns)
+                {
+                    if (col.Name == "OBSERVACIONES") { col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; col.MinimumWidth = 100; }
+                    else col.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                }
+            }
+        }
+
+        private void txtBuscarHistorial_TextChanged(object sender, EventArgs e)
+        {
+            string serieABuscar = txtBuscarHistorial.Text.Trim();
+
+            if (string.IsNullOrEmpty(serieABuscar))
+            {
+                CargarHistorial(); // Recarga las dos tablas completas
+                return;
+            }
+
+            // 1. Filtramos en la tabla de Historial Completo
+            string sqlHist = @"
+        SELECT I.GRUPO, H.FECHA, H.NSERIE, H.MODELO, H.UBICACION, H.DESCRIPCION 
+        FROM (
+            SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM TAMBORES
+            UNION ALL
+            SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM KIT_MANTENIMIENTO
+        ) H 
+        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+        WHERE H.NSERIE LIKE @s
+        ORDER BY H.FECHA DESC";
+            dgvHistorial.DataSource = db.ObtenerDatos(sqlHist, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
+
+            // 2. Filtramos en la tabla de Totales CON EL DESGLOSE DE FECHAS
+            string sqlTot = @"
+        SELECT I.GRUPO, H.NSERIE, H.MODELO, 
+               SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [Total Tambores],
+               MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [Último Tambor],
+               SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [Total Kits],
+               MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [Último Kit]
+        FROM (
+            SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
+            UNION ALL
+            SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
+        ) H 
+        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+        WHERE H.NSERIE LIKE @s
+        GROUP BY I.GRUPO, H.NSERIE, H.MODELO 
+        ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
+            dgvTotales.DataSource = db.ObtenerDatos(sqlTot, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
         }
     }
 }
