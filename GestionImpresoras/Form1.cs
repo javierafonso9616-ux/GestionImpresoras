@@ -59,6 +59,9 @@ namespace GestionImpresoras
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Form2 form2 = new Form2();
+            form2.ShowDialog();
+
             CargarInventario();
             CargarHistorial();
             // Limpiamos los buscadores por si acaso
