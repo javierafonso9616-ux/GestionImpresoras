@@ -1,6 +1,6 @@
 ﻿namespace GestionImpresoras
 {
-    partial class Form2
+    partial class FormPrincipal
     {
         /// <summary>
         /// Required designer variable.
@@ -34,9 +34,10 @@
             this.materialCardGridInventario = new MaterialSkin.Controls.MaterialCard();
             this.dgvInventario = new System.Windows.Forms.DataGridView();
             this.materialCardBotonesInventario = new MaterialSkin.Controls.MaterialCard();
+            this.materialLabel6 = new MaterialSkin.Controls.MaterialLabel();
             this.txtBuscarInventario = new MaterialSkin.Controls.MaterialTextBox2();
-            this.materialButton3 = new MaterialSkin.Controls.MaterialButton();
-            this.materialButton2 = new MaterialSkin.Controls.MaterialButton();
+            this.btnExportarInventario = new MaterialSkin.Controls.MaterialButton();
+            this.btnCargarInventario = new MaterialSkin.Controls.MaterialButton();
             this.materialButton1 = new MaterialSkin.Controls.MaterialButton();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.materialCardGridPedidos = new MaterialSkin.Controls.MaterialCard();
@@ -44,9 +45,8 @@
             this.materialCardBotonesPedidos = new MaterialSkin.Controls.MaterialCard();
             this.txtBuscarSerie = new MaterialSkin.Controls.MaterialTextBox2();
             this.materialLabel2 = new MaterialSkin.Controls.MaterialLabel();
-            this.materialButton6 = new MaterialSkin.Controls.MaterialButton();
-            this.materialButton5 = new MaterialSkin.Controls.MaterialButton();
-            this.materialButton4 = new MaterialSkin.Controls.MaterialButton();
+            this.btnExportarPedidos = new MaterialSkin.Controls.MaterialButton();
+            this.btnRegistrarPedido = new MaterialSkin.Controls.MaterialButton();
             this.cmbGrupo = new MaterialSkin.Controls.MaterialComboBox();
             this.materialLabel1 = new MaterialSkin.Controls.MaterialLabel();
             this.tabPage3 = new System.Windows.Forms.TabPage();
@@ -59,8 +59,8 @@
             this.materialCardBotonesHistorialyPedidos = new MaterialSkin.Controls.MaterialCard();
             this.txtBuscarHistorial = new MaterialSkin.Controls.MaterialTextBox2();
             this.materialLabel3 = new MaterialSkin.Controls.MaterialLabel();
-            this.materialButton8 = new MaterialSkin.Controls.MaterialButton();
-            this.materialButton7 = new MaterialSkin.Controls.MaterialButton();
+            this.btnExportarHistorial = new MaterialSkin.Controls.MaterialButton();
+            this.btnRecargarHistorialYTotales = new MaterialSkin.Controls.MaterialButton();
             this.materialTabSelector1 = new MaterialSkin.Controls.MaterialTabSelector();
             this.materialCardBase.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -110,6 +110,7 @@
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(1886, 937);
             this.tabControl1.TabIndex = 1;
+            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
             // tabPage1
             // 
@@ -153,9 +154,10 @@
             // 
             this.materialCardBotonesInventario.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.materialCardBotonesInventario.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.materialCardBotonesInventario.Controls.Add(this.materialLabel6);
             this.materialCardBotonesInventario.Controls.Add(this.txtBuscarInventario);
-            this.materialCardBotonesInventario.Controls.Add(this.materialButton3);
-            this.materialCardBotonesInventario.Controls.Add(this.materialButton2);
+            this.materialCardBotonesInventario.Controls.Add(this.btnExportarInventario);
+            this.materialCardBotonesInventario.Controls.Add(this.btnCargarInventario);
             this.materialCardBotonesInventario.Controls.Add(this.materialButton1);
             this.materialCardBotonesInventario.Depth = 0;
             this.materialCardBotonesInventario.Dock = System.Windows.Forms.DockStyle.Top;
@@ -168,16 +170,28 @@
             this.materialCardBotonesInventario.Size = new System.Drawing.Size(1872, 100);
             this.materialCardBotonesInventario.TabIndex = 0;
             // 
+            // materialLabel6
+            // 
+            this.materialLabel6.AutoSize = true;
+            this.materialLabel6.Depth = 0;
+            this.materialLabel6.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            this.materialLabel6.Location = new System.Drawing.Point(323, 20);
+            this.materialLabel6.MouseState = MaterialSkin.MouseState.HOVER;
+            this.materialLabel6.Name = "materialLabel6";
+            this.materialLabel6.Size = new System.Drawing.Size(138, 19);
+            this.materialLabel6.TabIndex = 4;
+            this.materialLabel6.Text = "Buscar por Nº Serie";
+            // 
             // txtBuscarInventario
             // 
             this.txtBuscarInventario.AnimateReadOnly = false;
             this.txtBuscarInventario.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.txtBuscarInventario.CharacterCasing = System.Windows.Forms.CharacterCasing.Normal;
+            this.txtBuscarInventario.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.txtBuscarInventario.Depth = 0;
             this.txtBuscarInventario.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
             this.txtBuscarInventario.HideSelection = true;
             this.txtBuscarInventario.LeadingIcon = global::GestionImpresoras.Properties.Resources.search_32dp_1F1F1F_FILL0_wght400_GRAD0_opsz40;
-            this.txtBuscarInventario.Location = new System.Drawing.Point(340, 32);
+            this.txtBuscarInventario.Location = new System.Drawing.Point(326, 42);
             this.txtBuscarInventario.MaxLength = 32767;
             this.txtBuscarInventario.MouseState = MaterialSkin.MouseState.OUT;
             this.txtBuscarInventario.Name = "txtBuscarInventario";
@@ -196,44 +210,47 @@
             this.txtBuscarInventario.TrailingIcon = null;
             this.txtBuscarInventario.UseSystemPasswordChar = false;
             this.txtBuscarInventario.UseTallSize = false;
+            this.txtBuscarInventario.TextChanged += new System.EventHandler(this.txtBuscarInventario_TextChanged);
             // 
-            // materialButton3
+            // btnExportarInventario
             // 
-            this.materialButton3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.materialButton3.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.materialButton3.Depth = 0;
-            this.materialButton3.HighEmphasis = true;
-            this.materialButton3.Icon = null;
-            this.materialButton3.Location = new System.Drawing.Point(200, 31);
-            this.materialButton3.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.materialButton3.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialButton3.Name = "materialButton3";
-            this.materialButton3.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.materialButton3.Size = new System.Drawing.Size(95, 36);
-            this.materialButton3.TabIndex = 2;
-            this.materialButton3.Text = "Exportar";
-            this.materialButton3.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.materialButton3.UseAccentColor = false;
-            this.materialButton3.UseVisualStyleBackColor = true;
+            this.btnExportarInventario.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnExportarInventario.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
+            this.btnExportarInventario.Depth = 0;
+            this.btnExportarInventario.HighEmphasis = true;
+            this.btnExportarInventario.Icon = null;
+            this.btnExportarInventario.Location = new System.Drawing.Point(200, 31);
+            this.btnExportarInventario.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnExportarInventario.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnExportarInventario.Name = "btnExportarInventario";
+            this.btnExportarInventario.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnExportarInventario.Size = new System.Drawing.Size(95, 36);
+            this.btnExportarInventario.TabIndex = 2;
+            this.btnExportarInventario.Text = "Exportar";
+            this.btnExportarInventario.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnExportarInventario.UseAccentColor = false;
+            this.btnExportarInventario.UseVisualStyleBackColor = true;
+            this.btnExportarInventario.Click += new System.EventHandler(this.btnExcel_Click);
             // 
-            // materialButton2
+            // btnCargarInventario
             // 
-            this.materialButton2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.materialButton2.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.materialButton2.Depth = 0;
-            this.materialButton2.HighEmphasis = true;
-            this.materialButton2.Icon = null;
-            this.materialButton2.Location = new System.Drawing.Point(96, 31);
-            this.materialButton2.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.materialButton2.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialButton2.Name = "materialButton2";
-            this.materialButton2.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.materialButton2.Size = new System.Drawing.Size(96, 36);
-            this.materialButton2.TabIndex = 1;
-            this.materialButton2.Text = "Recargar";
-            this.materialButton2.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.materialButton2.UseAccentColor = false;
-            this.materialButton2.UseVisualStyleBackColor = true;
+            this.btnCargarInventario.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnCargarInventario.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
+            this.btnCargarInventario.Depth = 0;
+            this.btnCargarInventario.HighEmphasis = true;
+            this.btnCargarInventario.Icon = null;
+            this.btnCargarInventario.Location = new System.Drawing.Point(96, 31);
+            this.btnCargarInventario.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnCargarInventario.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnCargarInventario.Name = "btnCargarInventario";
+            this.btnCargarInventario.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnCargarInventario.Size = new System.Drawing.Size(96, 36);
+            this.btnCargarInventario.TabIndex = 1;
+            this.btnCargarInventario.Text = "Recargar";
+            this.btnCargarInventario.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnCargarInventario.UseAccentColor = false;
+            this.btnCargarInventario.UseVisualStyleBackColor = true;
+            this.btnCargarInventario.Click += new System.EventHandler(this.btnCargarInventario_Click);
             // 
             // materialButton1
             // 
@@ -253,6 +270,7 @@
             this.materialButton1.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             this.materialButton1.UseAccentColor = false;
             this.materialButton1.UseVisualStyleBackColor = true;
+            this.materialButton1.Click += new System.EventHandler(this.btnNuevo_Click);
             // 
             // tabPage2
             // 
@@ -298,9 +316,8 @@
             this.materialCardBotonesPedidos.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.materialCardBotonesPedidos.Controls.Add(this.txtBuscarSerie);
             this.materialCardBotonesPedidos.Controls.Add(this.materialLabel2);
-            this.materialCardBotonesPedidos.Controls.Add(this.materialButton6);
-            this.materialCardBotonesPedidos.Controls.Add(this.materialButton5);
-            this.materialCardBotonesPedidos.Controls.Add(this.materialButton4);
+            this.materialCardBotonesPedidos.Controls.Add(this.btnExportarPedidos);
+            this.materialCardBotonesPedidos.Controls.Add(this.btnRegistrarPedido);
             this.materialCardBotonesPedidos.Controls.Add(this.cmbGrupo);
             this.materialCardBotonesPedidos.Controls.Add(this.materialLabel1);
             this.materialCardBotonesPedidos.Depth = 0;
@@ -318,12 +335,12 @@
             // 
             this.txtBuscarSerie.AnimateReadOnly = false;
             this.txtBuscarSerie.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.txtBuscarSerie.CharacterCasing = System.Windows.Forms.CharacterCasing.Normal;
+            this.txtBuscarSerie.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.txtBuscarSerie.Depth = 0;
             this.txtBuscarSerie.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
             this.txtBuscarSerie.HideSelection = true;
             this.txtBuscarSerie.LeadingIcon = global::GestionImpresoras.Properties.Resources.search_32dp_1F1F1F_FILL0_wght400_GRAD0_opsz40;
-            this.txtBuscarSerie.Location = new System.Drawing.Point(570, 47);
+            this.txtBuscarSerie.Location = new System.Drawing.Point(190, 47);
             this.txtBuscarSerie.MaxLength = 32767;
             this.txtBuscarSerie.MouseState = MaterialSkin.MouseState.OUT;
             this.txtBuscarSerie.Name = "txtBuscarSerie";
@@ -342,75 +359,59 @@
             this.txtBuscarSerie.TrailingIcon = null;
             this.txtBuscarSerie.UseSystemPasswordChar = false;
             this.txtBuscarSerie.UseTallSize = false;
+            this.txtBuscarSerie.TextChanged += new System.EventHandler(this.txtBuscarSerie_TextChanged);
             // 
             // materialLabel2
             // 
             this.materialLabel2.AutoSize = true;
             this.materialLabel2.Depth = 0;
             this.materialLabel2.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.materialLabel2.Location = new System.Drawing.Point(567, 15);
+            this.materialLabel2.Location = new System.Drawing.Point(179, 15);
             this.materialLabel2.MouseState = MaterialSkin.MouseState.HOVER;
             this.materialLabel2.Name = "materialLabel2";
             this.materialLabel2.Size = new System.Drawing.Size(138, 19);
             this.materialLabel2.TabIndex = 5;
             this.materialLabel2.Text = "Buscar por Nº Serie";
             // 
-            // materialButton6
+            // btnExportarPedidos
             // 
-            this.materialButton6.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.materialButton6.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.materialButton6.Depth = 0;
-            this.materialButton6.HighEmphasis = true;
-            this.materialButton6.Icon = null;
-            this.materialButton6.Location = new System.Drawing.Point(443, 31);
-            this.materialButton6.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.materialButton6.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialButton6.Name = "materialButton6";
-            this.materialButton6.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.materialButton6.Size = new System.Drawing.Size(95, 36);
-            this.materialButton6.TabIndex = 4;
-            this.materialButton6.Text = "Exportar";
-            this.materialButton6.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.materialButton6.UseAccentColor = false;
-            this.materialButton6.UseVisualStyleBackColor = true;
+            this.btnExportarPedidos.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnExportarPedidos.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
+            this.btnExportarPedidos.Depth = 0;
+            this.btnExportarPedidos.HighEmphasis = true;
+            this.btnExportarPedidos.Icon = null;
+            this.btnExportarPedidos.Location = new System.Drawing.Point(661, 31);
+            this.btnExportarPedidos.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnExportarPedidos.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnExportarPedidos.Name = "btnExportarPedidos";
+            this.btnExportarPedidos.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnExportarPedidos.Size = new System.Drawing.Size(95, 36);
+            this.btnExportarPedidos.TabIndex = 4;
+            this.btnExportarPedidos.Text = "Exportar";
+            this.btnExportarPedidos.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnExportarPedidos.UseAccentColor = false;
+            this.btnExportarPedidos.UseVisualStyleBackColor = true;
+            this.btnExportarPedidos.Click += new System.EventHandler(this.btnExcel_Click);
             // 
-            // materialButton5
+            // btnRegistrarPedido
             // 
-            this.materialButton5.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.materialButton5.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.materialButton5.Depth = 0;
-            this.materialButton5.HighEmphasis = true;
-            this.materialButton5.Icon = null;
-            this.materialButton5.Location = new System.Drawing.Point(281, 31);
-            this.materialButton5.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.materialButton5.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialButton5.Name = "materialButton5";
-            this.materialButton5.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.materialButton5.Size = new System.Drawing.Size(154, 36);
-            this.materialButton5.TabIndex = 3;
-            this.materialButton5.Text = "Registrar Pedido";
-            this.materialButton5.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.materialButton5.UseAccentColor = false;
-            this.materialButton5.UseVisualStyleBackColor = true;
-            // 
-            // materialButton4
-            // 
-            this.materialButton4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.materialButton4.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.materialButton4.Depth = 0;
-            this.materialButton4.HighEmphasis = true;
-            this.materialButton4.Icon = null;
-            this.materialButton4.Location = new System.Drawing.Point(183, 31);
-            this.materialButton4.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.materialButton4.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialButton4.Name = "materialButton4";
-            this.materialButton4.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.materialButton4.Size = new System.Drawing.Size(90, 36);
-            this.materialButton4.TabIndex = 2;
-            this.materialButton4.Text = "Mostrar";
-            this.materialButton4.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.materialButton4.UseAccentColor = false;
-            this.materialButton4.UseVisualStyleBackColor = true;
+            this.btnRegistrarPedido.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnRegistrarPedido.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
+            this.btnRegistrarPedido.Depth = 0;
+            this.btnRegistrarPedido.HighEmphasis = true;
+            this.btnRegistrarPedido.Icon = null;
+            this.btnRegistrarPedido.Location = new System.Drawing.Point(491, 31);
+            this.btnRegistrarPedido.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnRegistrarPedido.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnRegistrarPedido.Name = "btnRegistrarPedido";
+            this.btnRegistrarPedido.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnRegistrarPedido.Size = new System.Drawing.Size(154, 36);
+            this.btnRegistrarPedido.TabIndex = 3;
+            this.btnRegistrarPedido.Text = "Registrar Pedido";
+            this.btnRegistrarPedido.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnRegistrarPedido.UseAccentColor = false;
+            this.btnRegistrarPedido.UseVisualStyleBackColor = true;
+            this.btnRegistrarPedido.Click += new System.EventHandler(this.btnRegistrarPedido_Click);
             // 
             // cmbGrupo
             // 
@@ -418,7 +419,7 @@
             this.cmbGrupo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.cmbGrupo.Depth = 0;
             this.cmbGrupo.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-            this.cmbGrupo.DropDownHeight = 118;
+            this.cmbGrupo.DropDownHeight = 176;
             this.cmbGrupo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbGrupo.DropDownWidth = 121;
             this.cmbGrupo.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
@@ -426,21 +427,22 @@
             this.cmbGrupo.FormattingEnabled = true;
             this.cmbGrupo.IntegralHeight = false;
             this.cmbGrupo.ItemHeight = 29;
-            this.cmbGrupo.Location = new System.Drawing.Point(17, 48);
-            this.cmbGrupo.MaxDropDownItems = 4;
+            this.cmbGrupo.Location = new System.Drawing.Point(24, 48);
+            this.cmbGrupo.MaxDropDownItems = 6;
             this.cmbGrupo.MouseState = MaterialSkin.MouseState.OUT;
             this.cmbGrupo.Name = "cmbGrupo";
             this.cmbGrupo.Size = new System.Drawing.Size(121, 35);
             this.cmbGrupo.StartIndex = 0;
             this.cmbGrupo.TabIndex = 1;
             this.cmbGrupo.UseTallSize = false;
+            this.cmbGrupo.SelectedIndexChanged += new System.EventHandler(this.cmbGrupo_SelectedIndexChanged);
             // 
             // materialLabel1
             // 
             this.materialLabel1.AutoSize = true;
             this.materialLabel1.Depth = 0;
             this.materialLabel1.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.materialLabel1.Location = new System.Drawing.Point(17, 16);
+            this.materialLabel1.Location = new System.Drawing.Point(16, 16);
             this.materialLabel1.MouseState = MaterialSkin.MouseState.HOVER;
             this.materialLabel1.Name = "materialLabel1";
             this.materialLabel1.Size = new System.Drawing.Size(44, 19);
@@ -544,8 +546,8 @@
             this.materialCardBotonesHistorialyPedidos.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.materialCardBotonesHistorialyPedidos.Controls.Add(this.txtBuscarHistorial);
             this.materialCardBotonesHistorialyPedidos.Controls.Add(this.materialLabel3);
-            this.materialCardBotonesHistorialyPedidos.Controls.Add(this.materialButton8);
-            this.materialCardBotonesHistorialyPedidos.Controls.Add(this.materialButton7);
+            this.materialCardBotonesHistorialyPedidos.Controls.Add(this.btnExportarHistorial);
+            this.materialCardBotonesHistorialyPedidos.Controls.Add(this.btnRecargarHistorialYTotales);
             this.materialCardBotonesHistorialyPedidos.Depth = 0;
             this.materialCardBotonesHistorialyPedidos.Dock = System.Windows.Forms.DockStyle.Top;
             this.materialCardBotonesHistorialyPedidos.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -585,6 +587,7 @@
             this.txtBuscarHistorial.TrailingIcon = null;
             this.txtBuscarHistorial.UseSystemPasswordChar = false;
             this.txtBuscarHistorial.UseTallSize = false;
+            this.txtBuscarHistorial.TextChanged += new System.EventHandler(this.txtBuscarHistorial_TextChanged);
             // 
             // materialLabel3
             // 
@@ -598,43 +601,45 @@
             this.materialLabel3.TabIndex = 2;
             this.materialLabel3.Text = "Buscar por Nº Serie";
             // 
-            // materialButton8
+            // btnExportarHistorial
             // 
-            this.materialButton8.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.materialButton8.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.materialButton8.Depth = 0;
-            this.materialButton8.HighEmphasis = true;
-            this.materialButton8.Icon = null;
-            this.materialButton8.Location = new System.Drawing.Point(122, 39);
-            this.materialButton8.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.materialButton8.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialButton8.Name = "materialButton8";
-            this.materialButton8.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.materialButton8.Size = new System.Drawing.Size(95, 36);
-            this.materialButton8.TabIndex = 1;
-            this.materialButton8.Text = "Exportar";
-            this.materialButton8.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.materialButton8.UseAccentColor = false;
-            this.materialButton8.UseVisualStyleBackColor = true;
+            this.btnExportarHistorial.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnExportarHistorial.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
+            this.btnExportarHistorial.Depth = 0;
+            this.btnExportarHistorial.HighEmphasis = true;
+            this.btnExportarHistorial.Icon = null;
+            this.btnExportarHistorial.Location = new System.Drawing.Point(122, 39);
+            this.btnExportarHistorial.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnExportarHistorial.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnExportarHistorial.Name = "btnExportarHistorial";
+            this.btnExportarHistorial.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnExportarHistorial.Size = new System.Drawing.Size(95, 36);
+            this.btnExportarHistorial.TabIndex = 1;
+            this.btnExportarHistorial.Text = "Exportar";
+            this.btnExportarHistorial.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnExportarHistorial.UseAccentColor = false;
+            this.btnExportarHistorial.UseVisualStyleBackColor = true;
+            this.btnExportarHistorial.Click += new System.EventHandler(this.btnExcel_Click);
             // 
-            // materialButton7
+            // btnRecargarHistorialYTotales
             // 
-            this.materialButton7.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.materialButton7.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.materialButton7.Depth = 0;
-            this.materialButton7.HighEmphasis = true;
-            this.materialButton7.Icon = null;
-            this.materialButton7.Location = new System.Drawing.Point(18, 39);
-            this.materialButton7.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.materialButton7.MouseState = MaterialSkin.MouseState.HOVER;
-            this.materialButton7.Name = "materialButton7";
-            this.materialButton7.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.materialButton7.Size = new System.Drawing.Size(96, 36);
-            this.materialButton7.TabIndex = 0;
-            this.materialButton7.Text = "Recargar";
-            this.materialButton7.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.materialButton7.UseAccentColor = false;
-            this.materialButton7.UseVisualStyleBackColor = true;
+            this.btnRecargarHistorialYTotales.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnRecargarHistorialYTotales.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
+            this.btnRecargarHistorialYTotales.Depth = 0;
+            this.btnRecargarHistorialYTotales.HighEmphasis = true;
+            this.btnRecargarHistorialYTotales.Icon = null;
+            this.btnRecargarHistorialYTotales.Location = new System.Drawing.Point(18, 39);
+            this.btnRecargarHistorialYTotales.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnRecargarHistorialYTotales.MouseState = MaterialSkin.MouseState.HOVER;
+            this.btnRecargarHistorialYTotales.Name = "btnRecargarHistorialYTotales";
+            this.btnRecargarHistorialYTotales.NoAccentTextColor = System.Drawing.Color.Empty;
+            this.btnRecargarHistorialYTotales.Size = new System.Drawing.Size(96, 36);
+            this.btnRecargarHistorialYTotales.TabIndex = 0;
+            this.btnRecargarHistorialYTotales.Text = "Recargar";
+            this.btnRecargarHistorialYTotales.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            this.btnRecargarHistorialYTotales.UseAccentColor = false;
+            this.btnRecargarHistorialYTotales.UseVisualStyleBackColor = true;
+            this.btnRecargarHistorialYTotales.Click += new System.EventHandler(this.btnCargarHistorial_Click);
             // 
             // materialTabSelector1
             // 
@@ -659,6 +664,7 @@
             this.Controls.Add(this.materialCardBase);
             this.Name = "Form2";
             this.Text = "Gestión Impresoras";
+            this.Load += new System.EventHandler(this.Form2_Load);
             this.materialCardBase.ResumeLayout(false);
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
@@ -693,18 +699,17 @@
         private System.Windows.Forms.TabPage tabPage2;
         private MaterialSkin.Controls.MaterialCard materialCardGridInventario;
         private MaterialSkin.Controls.MaterialCard materialCardBotonesInventario;
-        private MaterialSkin.Controls.MaterialButton materialButton3;
-        private MaterialSkin.Controls.MaterialButton materialButton2;
+        private MaterialSkin.Controls.MaterialButton btnExportarInventario;
+        private MaterialSkin.Controls.MaterialButton btnCargarInventario;
         private MaterialSkin.Controls.MaterialButton materialButton1;
-        private System.Windows.Forms.DataGridView dgvInventario;
+        
         private MaterialSkin.Controls.MaterialCard materialCardGridPedidos;
         private MaterialSkin.Controls.MaterialCard materialCardBotonesPedidos;
         private MaterialSkin.Controls.MaterialTextBox2 txtBuscarInventario;
         private MaterialSkin.Controls.MaterialComboBox cmbGrupo;
         private MaterialSkin.Controls.MaterialLabel materialLabel1;
-        private MaterialSkin.Controls.MaterialButton materialButton6;
-        private MaterialSkin.Controls.MaterialButton materialButton5;
-        private MaterialSkin.Controls.MaterialButton materialButton4;
+        private MaterialSkin.Controls.MaterialButton btnExportarPedidos;
+        private MaterialSkin.Controls.MaterialButton btnRegistrarPedido;
         private MaterialSkin.Controls.MaterialLabel materialLabel2;
         private MaterialSkin.Controls.MaterialTextBox2 txtBuscarSerie;
         private System.Windows.Forms.DataGridView dgvPedidoWeb;
@@ -712,13 +717,15 @@
         private MaterialSkin.Controls.MaterialCard materialCardBotonesHistorialyPedidos;
         private MaterialSkin.Controls.MaterialTextBox2 txtBuscarHistorial;
         private MaterialSkin.Controls.MaterialLabel materialLabel3;
-        private MaterialSkin.Controls.MaterialButton materialButton8;
-        private MaterialSkin.Controls.MaterialButton materialButton7;
+        private MaterialSkin.Controls.MaterialButton btnExportarHistorial;
+        private MaterialSkin.Controls.MaterialButton btnRecargarHistorialYTotales;
         private MaterialSkin.Controls.MaterialCard materialCardGridHISTORIAL;
         private MaterialSkin.Controls.MaterialCard materialCardGridTOTALES;
         private MaterialSkin.Controls.MaterialLabel materialLabel4;
         private MaterialSkin.Controls.MaterialLabel materialLabel5;
         private System.Windows.Forms.DataGridView dgvTotales;
         private System.Windows.Forms.DataGridView dgvHistorial;
+        private System.Windows.Forms.DataGridView dgvInventario;
+        private MaterialSkin.Controls.MaterialLabel materialLabel6;
     }
 }
