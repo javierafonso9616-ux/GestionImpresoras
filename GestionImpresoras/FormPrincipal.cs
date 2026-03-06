@@ -199,7 +199,7 @@ namespace GestionImpresoras
                     }
                     else
                     {
-                        MessageBox.Show("La tabla de pedidos está vacía.");
+                        new MaterialSnackBar("La tabla de pedidos está vacía.", "OK", true).Show(this);
                     }
                     break;
 
@@ -208,7 +208,7 @@ namespace GestionImpresoras
                     break;
 
                 default:
-                    MessageBox.Show("No hay tabla para exportar aquí.");
+                    new MaterialSnackBar("No hay tabla para exportar aquí.", "OK", true).Show(this);
                     break;
             }
 
@@ -232,66 +232,74 @@ namespace GestionImpresoras
 
             string tipo = "";
 
-            // 1. Usamos MaterialForm y le damos un poco más de alto
+            // CREAMOS UN  NUEVO FORM MATERIALSKIN2 PARA LA VENTANITA 
             MaterialForm p = new MaterialForm()
             {
                 Width = 350,
-                Height = 220, // Más alto por la cabecera gruesa de MaterialSkin
+                Height = 220,
                 Text = "Seleccionar Tipo",
                 StartPosition = FormStartPosition.CenterParent,
                 MaximizeBox = false,
                 MinimizeBox = false,
-                Sizable = false // Evitamos que puedan estirar la mini-ventana
+                Sizable = false
             };
 
-            // OPCIONAL PERO RECOMENDADO: Le aplicamos tu gestor de temas para que pille tus colores
+            // APLICAMOS ESTILOS
             GestorTema.ConfigurarMaterialSkin(p);
 
-            // 2. Usamos MaterialLabel y MaterialButton. Ojo al 'Top' que lo hemos bajado a 80 y 140
+            // LABEL DEL TITULO CENTRADO
             MaterialLabel lbl = new MaterialLabel() { Left = 25, Top = 85, Width = 300, Text = "¿Qué consumible deseas solicitar?" };
 
-            // MaterialButton se auto-ajusta al texto, así que no hace falta ponerle Width ni Height
+            // BOTONES
             MaterialButton bK = new MaterialButton() { Text = "SOLICITAR KIT", Left = 40, Top = 140, DialogResult = DialogResult.Yes };
             MaterialButton bT = new MaterialButton() { Text = "SOLICITAR TAMBOR", Left = 175, Top = 140, DialogResult = DialogResult.No };
 
+            // AGREGA LOS CONTROLES
             p.Controls.AddRange(new Control[] { lbl, bK, bT });
 
+            // GUARDAMOS LA RESPUESTA SI/NO
             DialogResult r = p.ShowDialog();
 
+            // SI PARA KIT / NO PARA TAMBOR
             if (r == DialogResult.Yes) tipo = "KIT";
             else if (r == DialogResult.No) tipo = "TAMBOR";
             else return;
 
-            if (MessageBox.Show($"¿Registrar {filas.Count} pedidos de '{tipo}'?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            // PREGUNTAMOS SI QUEREMOS REGISTRAR X REGISTROS SI EL RESULTADO ES SI SE HACE EL TRY, SI SE ELIGE NO, SE CANCELA
+            // ESTA VENTANA SALE DESPUES DE SELECCIONAR EL TIPO DE REPUESTO QUE SE VA A PEDIR
+            if (MostrarMaterialMessageBox($"¿Registrar {filas.Count} pedidos de '{tipo}'?", "Confirmar") == DialogResult.Yes)
             {
                 try
                 {
-                    // Elegimos la tabla según el botón que ha pulsado
+
+                    // ELEGIMOS LA TABLA SEGUN EL BOTON PULSADO
                     string tablaDestino = tipo == "KIT" ? "KIT_MANTENIMIENTO" : "TAMBORES";
 
-                    // Lo ponemos en MAYÚSCULAS para la columna Descripción
+
+                    // PONEMOS EN MAYUSCULAS PARA LA COLUMNA DESCRIPCION
                     string nombreConsumible = tipo == "KIT" ? "KIT_MANTENIMIENTO" : "TAMBORES";
+
 
                     foreach (DataGridViewRow f in filas)
                     {
                         string sql = $"INSERT INTO {tablaDestino} (MODELO, NSERIE, UBICACION, DESCRIPCION, FECHA) VALUES (@m, @s, @u, @d, GETDATE())";
                         SqlParameter[] param = {
-                 new SqlParameter("@m", f.Cells["MODELO"].Value?.ToString() ?? ""),
-                 new SqlParameter("@s", f.Cells["NSERIE"].Value.ToString()),
-                 new SqlParameter("@u", f.Cells["UBICACION"].Value?.ToString() ?? ""),
-                 new SqlParameter("@d", nombreConsumible)
-             };
+                                                 new SqlParameter("@m", f.Cells["MODELO"].Value?.ToString() ?? ""),
+                                                 new SqlParameter("@s", f.Cells["NSERIE"].Value.ToString()),
+                                                 new SqlParameter("@u", f.Cells["UBICACION"].Value?.ToString() ?? ""),
+                                                 new SqlParameter("@d", nombreConsumible)
+                                                };
                         db.EjecutarComando(sql, param);
                     }
 
                     CargarHistorial();
                     dgvPedidoWeb.DataSource = null;
-                    MessageBox.Show("Pedidos registrados correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    new MaterialSnackBar("Pedidos registrados correctamente.", "OK", true).Show(this);
                 }
-                catch (Exception ex) { MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { new MaterialSnackBar("Error: " + ex.Message, "OK", true).Show(this); }
             }
 
-            // Limpiamos el buscador por si acaso
+            // LIMPIAMOS TEXTBOX
             txtBuscarSerie.Text = "";
         }
 
@@ -310,7 +318,7 @@ namespace GestionImpresoras
                     string serieRegistrada = frmNuevo.SerieGuardada;
 
                     CargarInventario();
-                    MessageBox.Show($"Equipo registrado correctamente con la serie: {serieRegistrada}", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    new MaterialSnackBar($"Equipo registrado con la serie: {serieRegistrada}", "OK", true).Show(this);
                 }
             }
         }
@@ -474,7 +482,7 @@ namespace GestionImpresoras
                 isDeleting = true;
                 string msg = seleccionados == 1 ? "¿Borrar registro?" : $"¿Borrar {seleccionados} registros?";
 
-                if (MessageBox.Show(msg, "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                if (MostrarMaterialMessageBox(msg, "Confirmar") == DialogResult.Yes)
                 {
                     try
                     {
@@ -502,7 +510,7 @@ namespace GestionImpresoras
                         CargarInventario();
                         CargarHistorial();
                     }
-                    catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+                    catch (Exception ex) { new MaterialSnackBar("Error: " + ex.Message, "OK", true).Show(this); }
                 }
                 isDeleting = false;
             }
@@ -519,7 +527,7 @@ namespace GestionImpresoras
             {
                 if (!avisoPedidosMostrado && cmbGrupo.SelectedIndex == -1)
                 {
-                    MessageBox.Show("Seleccione un grupo para mostrar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    new MaterialSnackBar("AVISO: \nSeleccione un grupo para mostrar.", 20000, "OK", true).Show(this);
                     avisoPedidosMostrado = true;
                 }
             }
@@ -664,7 +672,7 @@ namespace GestionImpresoras
 
         private void ExportarAExcel(DataGridView grid, string nombreBase)
         {
-            if (grid.Rows.Count == 0) { MessageBox.Show("No hay datos para exportar."); return; }
+            if (grid.Rows.Count == 0) { new MaterialSnackBar("No hay datos para exportar.", "OK", true).Show(this); return; }
 
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "Excel Workbook|*.xlsx";
@@ -710,14 +718,43 @@ namespace GestionImpresoras
 
                         worksheet.Columns().AdjustToContents();
                         workbook.SaveAs(sfd.FileName);
-                        MessageBox.Show("Exportado correctamente. ✔");
+                        new MaterialSnackBar("Exportado correctamente. ✔", "OK", true).Show(this);
                     }
                 }
-                catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+                catch (Exception ex) { new MaterialSnackBar("Error: " + ex.Message, "OK", true).Show(this); }
             }
         }
 
+        private DialogResult MostrarMaterialMessageBox(string mensaje, string titulo)
+        {
+            MaterialForm msgForm = new MaterialForm()
+            {
+                Width = 400,
+                Height = 200,
+                Text = titulo,
+                StartPosition = FormStartPosition.CenterParent,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                Sizable = false
+            };
 
+            GestorTema.ConfigurarMaterialSkin(msgForm);
+
+            MaterialLabel lbl = new MaterialLabel()
+            {
+                Left = 20,
+                Top = 80,
+                Width = 360,
+                Text = mensaje
+            };
+
+            MaterialButton btnSi = new MaterialButton() { Text = "SÍ", Left = 220, Top = 150, DialogResult = DialogResult.Yes };
+            MaterialButton btnNo = new MaterialButton() { Text = "NO", Left = 290, Top = 150, DialogResult = DialogResult.No };
+
+            msgForm.Controls.AddRange(new Control[] { lbl, btnSi, btnNo });
+
+            return msgForm.ShowDialog();
+        }
 
     }
 }

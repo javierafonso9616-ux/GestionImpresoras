@@ -1,4 +1,5 @@
 ﻿using GestionImpresoras.DatosImpresoras; // Asegúrate de tener este using para AccesoDatos
+using GestionIP.Clases;
 using MaterialSkin.Controls;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
+
 
 namespace GestionImpresoras
 {
@@ -88,19 +90,19 @@ namespace GestionImpresoras
             // 1. Validaciones básicas
             if (string.IsNullOrEmpty(se) || string.IsNullOrEmpty(ub) || string.IsNullOrEmpty(mo) || string.IsNullOrEmpty(ip))
             {
-                MessageBox.Show("Faltan datos obligatorios.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MostrarMaterialMessageBox("Faltan datos obligatorios.", "Aviso");
                 return;
             }
 
             // 2. Validación de IP
             if (ips.Contains(ip))
             {
-                MessageBox.Show("Esa IP ya está ocupada por otra impresora.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MostrarMaterialMessageBox("Esa IP ya está ocupada por otra impresora.", "Error");
                 return;
             }
             if (!System.Net.IPAddress.TryParse(ip, out _) || ip.Split('.').Length != 4)
             {
-                MessageBox.Show("El formato de la IP es incorrecto (Ejemplo válido: 192.168.1.100).", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MostrarMaterialMessageBox("El formato de la IP es incorrecto (Ejemplo válido: 192.168.1.100).", "Error");
                 return;
             }
 
@@ -108,7 +110,7 @@ namespace GestionImpresoras
             string sqlComprobarSerie = "SELECT IP FROM IMPRESORAS WHERE NSERIE=@s";
             if (db.ObtenerDatos(sqlComprobarSerie, new SqlParameter[] { new SqlParameter("@s", se) }).Rows.Count > 0)
             {
-                MessageBox.Show("Ya existe una impresora con ese Número de Serie.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MostrarMaterialMessageBox("Ya existe una impresora con ese Número de Serie.", "Error");
                 return;
             }
 
@@ -122,7 +124,7 @@ namespace GestionImpresoras
                 }
                 else
                 {
-                    MessageBox.Show("El grupo debe ser un número entero.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MostrarMaterialMessageBox("El grupo debe ser un número entero.", "Error");
                     return;
                 }
             }
@@ -151,7 +153,7 @@ namespace GestionImpresoras
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al guardar en base de datos: " + ex.Message, "Error crítico", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MostrarMaterialMessageBox("Error al guardar en base de datos: " + ex.Message, "Error crítico");
             }
         }
 
@@ -159,5 +161,42 @@ namespace GestionImpresoras
         {
             this.DialogResult = DialogResult.Cancel;
         }
+
+        //-----------------------------------------------------------------------------------
+        // METODOS
+        //-----------------------------------------------------------------------------------
+
+        private DialogResult MostrarMaterialMessageBox(string mensaje, string titulo)
+        {
+            MaterialForm msgForm = new MaterialForm()
+            {
+                Width = 400,
+                Height = 200,
+                Text = titulo,
+                StartPosition = FormStartPosition.CenterParent,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                Sizable = false
+            };
+
+            GestorTema.ConfigurarMaterialSkin(msgForm);
+
+            MaterialLabel lbl = new MaterialLabel()
+            {
+                Left = 20,
+                Top = 80,
+                Width = 360,
+                Text = mensaje
+            };
+
+            // Para avisos simples solo necesitamos un botón ACEPTAR
+            MaterialButton btnOk = new MaterialButton() { Text = "ACEPTAR", Left = 280, Top = 150, DialogResult = DialogResult.OK };
+
+            msgForm.Controls.AddRange(new Control[] { lbl, btnOk });
+
+            return msgForm.ShowDialog();
+        }
+
+
     }
 }
