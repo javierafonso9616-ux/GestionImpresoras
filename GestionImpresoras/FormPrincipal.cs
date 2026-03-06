@@ -39,14 +39,16 @@ namespace GestionImpresoras
         //-----------------------------------------------------------------------------------
         private void Form2_Load(object sender, EventArgs e)
         {
-            CargarInventario();
-            CargarHistorial(); // historial y totales se cargan juntos porque comparten datos
+
 
             // Limpiamos los buscadores por si acaso
             txtBuscarInventario.Text = "";
 
             RellenarcmbGrupo();
             ConfigurarGrids();
+
+            CargarInventario();
+            CargarHistorial(); // historial y totales se cargan juntos porque comparten datos
         }
 
         //-----------------------------------------------------------------------------------
@@ -61,6 +63,7 @@ namespace GestionImpresoras
             dgvInventario.RowValidated += dgvInventario_RowValidated;
             dgvInventario.CellFormatting += AplicarColoresGrupo;
             dgvInventario.KeyDown += Grids_KeyDown;
+
 
             // PEDIDO WEB
             dgvPedidoWeb.ReadOnly = true;
@@ -110,7 +113,8 @@ namespace GestionImpresoras
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             grid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245);
             grid.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
-            grid.RowHeadersVisible = false;
+            grid.RowHeadersVisible = true;
+
 
             if (grid.Columns.Contains("GRUPO"))
             {
@@ -446,6 +450,7 @@ namespace GestionImpresoras
                 return;
             }
 
+
             string sql; SqlParameter[] p = null;
 
             if (cmbGrupo.Text == "Sin Grupo")
@@ -494,6 +499,8 @@ namespace GestionImpresoras
                             if (grid.Name == "dgvInventario")
                             {
                                 db.EjecutarComando("DELETE FROM IMPRESORAS WHERE NSERIE = @s", new SqlParameter[] { new SqlParameter("@s", nSerie) });
+
+                                new MaterialSnackBar("Borrado exitosamente", 3000, "OK");
                             }
                             else if (grid.Name == "dgvHistorial")
                             {
@@ -505,6 +512,8 @@ namespace GestionImpresoras
 
                                 db.EjecutarComando($"DELETE FROM {tablaBorrado} WHERE NSERIE = @s AND FECHA = @f",
                                     new SqlParameter[] { new SqlParameter("@s", nSerie), new SqlParameter("@f", f) });
+
+                                new MaterialSnackBar("Borrado exitosamente", 3000, "OK");
                             }
                         }
                         CargarInventario();
@@ -718,7 +727,7 @@ namespace GestionImpresoras
 
                         worksheet.Columns().AdjustToContents();
                         workbook.SaveAs(sfd.FileName);
-                        new MaterialSnackBar("Exportado correctamente. ✔", "OK", true).Show(this);
+                        new MaterialSnackBar("Exportado correctamente. ✔", 5000, "OK", true).Show(this);
                     }
                 }
                 catch (Exception ex) { new MaterialSnackBar("Error: " + ex.Message, "OK", true).Show(this); }

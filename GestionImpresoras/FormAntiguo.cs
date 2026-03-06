@@ -10,12 +10,12 @@ using System.Windows.Forms;
 
 namespace GestionImpresoras
 {
-    public partial class Form1 : Form
+    public partial class FormAntiguo : Form
     {
         AccesoDatos db = new AccesoDatos();
         bool isDeleting = false;
 
-        public Form1()
+        public FormAntiguo()
         {
             InitializeComponent();
             this.WindowState = FormWindowState.Maximized;

@@ -207,11 +207,11 @@
     <Compile Include="DatosImpresoras\AccesoDatos.cs" />
     <Compile Include="Entidades\Historial.cs" />
     <Compile Include="Entidades\Impresoras.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="FormAntiguo.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="FormAntiguo.Designer.cs">
+      <DependentUpon>FormAntiguo.cs</DependentUpon>
     </Compile>
     <Compile Include="FormNuevaImpresora.cs">
       <SubType>Form</SubType>
@@ -227,8 +227,8 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="FormAntiguo.resx">
+      <DependentUpon>FormAntiguo.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormNuevaImpresora.resx">
       <DependentUpon>FormNuevaImpresora.cs</DependentUpon>
