@@ -14,20 +14,29 @@ namespace GestionImpresoras
 {
     public partial class FormPrincipal : MaterialForm
     {
-        // Instancia de la clase AccesoDatos para interactuar con la base de datos
+        // INSTANCIA DE LA CLASE DE ACCESO A DATOS
         AccesoDatos db = new AccesoDatos();
+
+        // BANDERA PARA CONTROLAR CUANDO SE ESTÁN BORRANDO FILAS Y EVITAR QUE SE EJECUTEN LOS EVENTOS DE VALIDACIÓN DE FILA
         bool isDeleting = false;
 
-        // --- NUEVO: Bandera para recordar que ya avisamos ---
+        // BANDERA PARA CONTROLAR EL AVISO DE SELECCIÓN DE GRUPO EN LA PESTAÑA DE PEDIDOS, ASÍ SOLO SE MUESTRA UNA VEZ
         bool avisoPedidosMostrado = false;
 
+        // -----------------------------------------------------------------------------------
+        // CONSTRUCTOR
+        // -----------------------------------------------------------------------------------
         public FormPrincipal()
         {
             InitializeComponent();
             GestorTema.ConfigurarMaterialSkin(this);
             this.WindowState = FormWindowState.Maximized;
+            this.MaximizedBounds = Screen.FromHandle(this.Handle).WorkingArea; // EVITA QUE SE SOLAPE CON LA BARRA DE TAREAS AL MAXIMIZAR
         }
 
+        //-----------------------------------------------------------------------------------
+        // EVENTO LOAD (CARGA EL FORMULARIO)
+        //-----------------------------------------------------------------------------------
         private void Form2_Load(object sender, EventArgs e)
         {
             CargarInventario();
@@ -40,16 +49,9 @@ namespace GestionImpresoras
             ConfigurarGrids();
         }
 
-        private void RellenarcmbGrupo()
-        {
-            DataTable dt = db.ObtenerDatos("SELECT DISTINCT GRUPO FROM IMPRESORAS WHERE GRUPO IS NOT NULL AND GRUPO <> '' ORDER BY GRUPO");
-            cmbGrupo.Items.Clear();
-            cmbGrupo.Items.Add("Sin Grupo");
-            foreach (DataRow r in dt.Rows) cmbGrupo.Items.Add(r["GRUPO"].ToString());
-
-            // --- NUEVO: Forzamos a que el desplegable empiece en blanco ---
-            cmbGrupo.SelectedIndex = -1;
-        }
+        //-----------------------------------------------------------------------------------
+        // CONFIGURACIONES INICIALES
+        //-----------------------------------------------------------------------------------
 
         private void ConfigurarGrids()
         {
@@ -89,7 +91,6 @@ namespace GestionImpresoras
             AplicarEstilosVarios(dgvInventario, dgvPedidoWeb, dgvHistorial, dgvTotales);
         }
 
-        // Método para aplicar estilos personalizados a un DataGridView
         private void AplicarEstilosGrid(DataGridView grid)
         {
             Color azulOscuro = Color.FromArgb(13, 71, 161);
@@ -118,7 +119,6 @@ namespace GestionImpresoras
             }
         }
 
-        // Método para aplicar estilos a múltiples DataGridView
         public void AplicarEstilosVarios(params DataGridView[] grids)
         {
             foreach (var grid in grids)
@@ -127,9 +127,19 @@ namespace GestionImpresoras
             }
         }
 
-        // ==========================================
-        // --- GESTIÓN DE COLORES ---
-        // ==========================================
+        private void RellenarcmbGrupo()
+        {
+            // OBTENEMOS LOS GRUPOS DISTINTOS DE LA BASE DE DATOS, EXCLUYENDO LOS NULOS Y VACÍOS, Y LOS ORDENAMOS ALFABÉTICAMENTE
+
+            DataTable dt = db.ObtenerDatos("SELECT DISTINCT GRUPO FROM IMPRESORAS WHERE GRUPO IS NOT NULL AND GRUPO <> '' ORDER BY GRUPO");
+            cmbGrupo.Items.Clear();
+            cmbGrupo.Items.Add("Sin Grupo");
+            foreach (DataRow r in dt.Rows) cmbGrupo.Items.Add(r["GRUPO"].ToString());
+
+            // FORZAMOS A QUE NO HAYA NINGUNA OPCIÓN SELECCIONADA AL INICIO, ASÍ SE MUESTRA EL AVISO DE SELECCIÓN DE GRUPO EN LA PESTAÑA DE PEDIDOS
+            cmbGrupo.SelectedIndex = -1;
+        }
+
         private Color ObtenerColorPorGrupo(string grupo)
         {
             if (string.IsNullOrEmpty(grupo)) return Color.White;
@@ -152,6 +162,7 @@ namespace GestionImpresoras
 
         private void AplicarColoresGrupo(object sender, DataGridViewCellFormattingEventArgs e)
         {
+            // APLICAMOS LOS COLORES DE FONDO SEGÚN EL GRUPO, SOLO SI LA COLUMNA ES "GRUPO" Y EL VALOR NO ES NULO
             DataGridView grid = (DataGridView)sender;
             if (grid.Columns[e.ColumnIndex].Name == "GRUPO" && e.Value != null)
             {
@@ -159,21 +170,24 @@ namespace GestionImpresoras
             }
         }
 
-        // ==========================================
-        // --- EXPORTACIÓN A EXCEL (PERSONALIZADA) ---
-        // ==========================================
+
+        //-----------------------------------------------------------------------------------
+        // BOTONES
+        //-----------------------------------------------------------------------------------
 
         private void btnExcel_Click(object sender, EventArgs e)
         {
+            // OBTENEMOS EN QUE PESTAÑA ESTAMOS
             int indicePestana = tabControl1.SelectedIndex;
+
 
             switch (indicePestana)
             {
-                case 0: // Inventario
+                case 0: // INVENTARIO
                     ExportarAExcel(dgvInventario, "InventarioImpresora");
                     break;
 
-                case 1: // Solicitar (Pedidos)
+                case 1: // PEDIDOS
                     if (dgvPedidoWeb.Rows.Count > 0)
                     {
                         string grupoSeleccionado = cmbGrupo.Text.Trim();
@@ -189,7 +203,7 @@ namespace GestionImpresoras
                     }
                     break;
 
-                case 2: // Historial / Totales
+                case 2: // HISTORIAL Y TOTALES
                     PreguntarYExportarHistorial();
                     break;
 
@@ -198,267 +212,17 @@ namespace GestionImpresoras
                     break;
             }
 
-            // Limpiamos los buscadores por si acaso
+            // LIMPIAMOS BUSCADORES
             txtBuscarSerie.Text = "";
             txtBuscarInventario.Text = "";
             txtBuscarHistorial.Text = "";
         }
 
-        private void PreguntarYExportarHistorial()
-        {
-            Form prompt = new Form()
-            {
-                Width = 350,
-                Height = 180,
-                Text = "Exportar a Excel",
-                FormBorderStyle = FormBorderStyle.FixedDialog,
-                StartPosition = FormStartPosition.CenterParent,
-                MaximizeBox = false,
-                MinimizeBox = false
-            };
-
-            Label lbl = new Label() { Left = 20, Top = 20, Width = 300, Text = "¿Qué tabla desea exportar?" };
-            Button btnHist = new Button() { Text = "Historial Completo", Left = 30, Top = 50, Width = 280, DialogResult = DialogResult.Yes, BackColor = Color.AliceBlue };
-            Button btnTot = new Button() { Text = "Resumen de Totales", Left = 30, Top = 90, Width = 280, DialogResult = DialogResult.No, BackColor = Color.AliceBlue };
-
-            prompt.Controls.AddRange(new Control[] { lbl, btnHist, btnTot });
-
-            DialogResult res = prompt.ShowDialog();
-
-            if (res == DialogResult.Yes)
-                ExportarAExcel(dgvHistorial, "InventarioImpresorasHistorico");
-            else if (res == DialogResult.No)
-                ExportarAExcel(dgvTotales, "InventarioImpresorasTotalesPedidos");
-        }
-
-        private void ExportarAExcel(DataGridView grid, string nombreBase)
-        {
-            if (grid.Rows.Count == 0) { MessageBox.Show("No hay datos para exportar."); return; }
-
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Excel Workbook|*.xlsx";
-            sfd.FileName = $"{nombreBase}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    using (var workbook = new XLWorkbook())
-                    {
-                        var worksheet = workbook.Worksheets.Add("Datos");
-
-                        for (int i = 0; i < grid.Columns.Count; i++)
-                        {
-                            var celda = worksheet.Cell(1, i + 1);
-                            celda.Value = grid.Columns[i].HeaderText;
-                            celda.Style.Font.Bold = true;
-                            celda.Style.Fill.BackgroundColor = XLColor.LightGray;
-                            celda.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                        }
-
-                        for (int i = 0; i < grid.Rows.Count; i++)
-                        {
-                            if (grid.Rows[i].IsNewRow) continue;
-
-                            for (int j = 0; j < grid.Columns.Count; j++)
-                            {
-                                var valor = grid.Rows[i].Cells[j].Value?.ToString() ?? "";
-                                var celdaExcel = worksheet.Cell(i + 2, j + 1);
-                                celdaExcel.Value = valor;
-
-                                if (grid.Columns[j].Name == "GRUPO")
-                                {
-                                    Color c = ObtenerColorPorGrupo(valor);
-                                    if (c != Color.White)
-                                    {
-                                        celdaExcel.Style.Fill.BackgroundColor = XLColor.FromColor(c);
-                                    }
-                                }
-                            }
-                        }
-
-                        worksheet.Columns().AdjustToContents();
-                        workbook.SaveAs(sfd.FileName);
-                        MessageBox.Show("Exportado correctamente. ✔");
-                    }
-                }
-                catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
-            }
-        }
-
-        // ==========================================
-        // --- BORRADO (SUPR) ---
-        // ==========================================
-        private void Grids_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Delete)
-            {
-                DataGridView grid = (DataGridView)sender;
-                int seleccionados = grid.SelectedRows.Count;
-                if (seleccionados == 0) return;
-
-                isDeleting = true;
-                string msg = seleccionados == 1 ? "¿Borrar registro?" : $"¿Borrar {seleccionados} registros?";
-
-                if (MessageBox.Show(msg, "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-                {
-                    try
-                    {
-                        foreach (DataGridViewRow fila in grid.SelectedRows)
-                        {
-                            if (fila.IsNewRow) continue;
-                            string nSerie = fila.Cells["NSERIE"].Value?.ToString();
-
-                            if (grid.Name == "dgvInventario")
-                            {
-                                db.EjecutarComando("DELETE FROM IMPRESORAS WHERE NSERIE = @s", new SqlParameter[] { new SqlParameter("@s", nSerie) });
-                            }
-                            else if (grid.Name == "dgvHistorial")
-                            {
-                                DateTime f = Convert.ToDateTime(fila.Cells["FECHA"].Value);
-                                string descripcion = fila.Cells["DESCRIPCION"].Value?.ToString().ToUpper() ?? "";
-
-                                // Averiguamos de qué tabla borrar basándonos en la descripción
-                                string tablaBorrado = descripcion.Contains("KIT") ? "KIT_MANTENIMIENTO" : "TAMBORES";
-
-                                db.EjecutarComando($"DELETE FROM {tablaBorrado} WHERE NSERIE = @s AND FECHA = @f",
-                                    new SqlParameter[] { new SqlParameter("@s", nSerie), new SqlParameter("@f", f) });
-                            }
-                        }
-                        CargarInventario();
-                        CargarHistorial();
-                    }
-                    catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
-                }
-                isDeleting = false;
-            }
-        }
-
-        // ==========================================
-        // --- CARGA DE DATOS ---
-        // ==========================================
-        public void CargarInventario()
-        {
-            string sql = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
-            DataTable dt = db.ObtenerDatos(sql);
-
-            if (dt != null)
-            {
-                dgvInventario.DataSource = dt;
-                AplicarEstilosGrid(dgvInventario);
-
-                dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-
-                foreach (DataGridViewColumn col in dgvInventario.Columns)
-                {
-                    if (col.Name == "OBSERVACIONES")
-                    {
-                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                        col.MinimumWidth = 100;
-                    }
-                    else
-                    {
-                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-                    }
-                }
-            }
-        }
-
-        public void CargarHistorial()
-        {
-            try
-            {
-                // Unimos TAMBORES y KIT_MANTENIMIENTO para el historial detallado
-                string sqlH = @"
-                        SELECT I.GRUPO, H.FECHA, H.NSERIE, H.MODELO, H.UBICACION, H.DESCRIPCION 
-                        FROM (
-                            SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM TAMBORES
-                            UNION ALL
-                            SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM KIT_MANTENIMIENTO
-                        ) H 
-                        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
-                        ORDER BY H.FECHA DESC";
-                dgvHistorial.DataSource = db.ObtenerDatos(sqlH);
-
-                // SQL MODIFICADO: Separamos fechas y totales
-                string sqlT = @"
-                        SELECT I.GRUPO, H.NSERIE, H.MODELO, 
-                               SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [TOTAL TAMBORES],
-                               MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [ÚLTIMO TAMBOR],
-                               SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [TOTAL KITS],
-                               MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [ÚLTIMO KIT]
-                        FROM (
-                            SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
-                            UNION ALL
-                            SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
-                        ) H 
-                        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
-                        GROUP BY I.GRUPO, H.NSERIE, H.MODELO 
-                        ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
-                dgvTotales.DataSource = db.ObtenerDatos(sqlT);
-
-                // Limpiamos los buscadores por si acaso
-                txtBuscarHistorial.Text = "";
-                txtBuscarInventario.Text = "";
-                txtBuscarSerie.Text = "";
-
-                dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-                dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            }
-            catch { }
-        }
-
-        // ==========================================
-        // --- EVENTOS PESTAÑAS Y EDICIÓN ---
-        // ==========================================
-        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (tabControl1.SelectedIndex == 2)
-            {
-                CargarHistorial();
-            }
-            // --- NUEVO: Control de aviso en la pestaña Pedidos ---
-            else if (tabControl1.SelectedIndex == 1)
-            {
-                if (!avisoPedidosMostrado && cmbGrupo.SelectedIndex == -1)
-                {
-                    MessageBox.Show("Seleccione un grupo para mostrar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    avisoPedidosMostrado = true;
-                }
-            }
-        }
-
-        private void dgvInventario_RowValidated(object sender, DataGridViewCellEventArgs e)
-        {
-            if (isDeleting || dgvInventario.Rows[e.RowIndex].IsNewRow) return;
-
-            var fila = dgvInventario.Rows[e.RowIndex];
-            string nSerie = fila.Cells["NSERIE"].Value?.ToString();
-            if (string.IsNullOrEmpty(nSerie)) return;
-
-            string sql = @"IF EXISTS (SELECT 1 FROM IMPRESORAS WHERE NSERIE = @s)
-                               UPDATE IMPRESORAS SET UBICACION=@u, MODELO=@m, IP=@i, OBSERVACIONES=@o, GRUPO=@g WHERE NSERIE=@s
-                               ELSE
-                               INSERT INTO IMPRESORAS (UBICACION, MODELO, NSERIE, IP, OBSERVACIONES, GRUPO) VALUES (@u, @m, @s, @i, @o, @g)";
-
-            SqlParameter[] p = {
-                    new SqlParameter("@u", fila.Cells["UBICACION"].Value ?? ""),
-                    new SqlParameter("@m", fila.Cells["MODELO"].Value ?? ""),
-                    new SqlParameter("@s", nSerie),
-                    new SqlParameter("@i", fila.Cells["IP"].Value ?? ""),
-                    new SqlParameter("@o", fila.Cells["OBSERVACIONES"].Value ?? (object)DBNull.Value),
-                    new SqlParameter("@g", fila.Cells["GRUPO"].Value ?? (object)DBNull.Value)
-                };
-            db.EjecutarComando(sql, p);
-        }
-
-        // ==========================================
-        // --- PESTAÑA SOLICITAR ---
-        // ==========================================
-
         private void btnRegistrarPedido_Click(object sender, EventArgs e)
         {
+            // SI NO HAY REGISTROS SALE
             if (dgvPedidoWeb.Rows.Count == 0) return;
+
 
             List<DataGridViewRow> filas = dgvPedidoWeb.SelectedRows.Count > 0
                 ? dgvPedidoWeb.SelectedRows.Cast<DataGridViewRow>().ToList()
@@ -467,20 +231,28 @@ namespace GestionImpresoras
             if (filas.Count == 0) return;
 
             string tipo = "";
-            Form p = new Form()
+
+            // 1. Usamos MaterialForm y le damos un poco más de alto
+            MaterialForm p = new MaterialForm()
             {
-                Width = 300,
-                Height = 160,
+                Width = 350,
+                Height = 220, // Más alto por la cabecera gruesa de MaterialSkin
                 Text = "Seleccionar Tipo",
                 StartPosition = FormStartPosition.CenterParent,
-                FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false,
-                MinimizeBox = false
+                MinimizeBox = false,
+                Sizable = false // Evitamos que puedan estirar la mini-ventana
             };
 
-            Label lbl = new Label() { Left = 20, Top = 15, Width = 250, Text = "¿Qué consumible deseas solicitar?" };
-            Button bK = new Button() { Text = "KIT", Left = 40, Top = 50, Width = 90, Height = 35, DialogResult = DialogResult.Yes, BackColor = Color.LightYellow };
-            Button bT = new Button() { Text = "TAMBOR", Left = 150, Top = 50, Width = 90, Height = 35, DialogResult = DialogResult.No, BackColor = Color.LightCyan };
+            // OPCIONAL PERO RECOMENDADO: Le aplicamos tu gestor de temas para que pille tus colores
+            GestorTema.ConfigurarMaterialSkin(p);
+
+            // 2. Usamos MaterialLabel y MaterialButton. Ojo al 'Top' que lo hemos bajado a 80 y 140
+            MaterialLabel lbl = new MaterialLabel() { Left = 25, Top = 85, Width = 300, Text = "¿Qué consumible deseas solicitar?" };
+
+            // MaterialButton se auto-ajusta al texto, así que no hace falta ponerle Width ni Height
+            MaterialButton bK = new MaterialButton() { Text = "SOLICITAR KIT", Left = 40, Top = 140, DialogResult = DialogResult.Yes };
+            MaterialButton bT = new MaterialButton() { Text = "SOLICITAR TAMBOR", Left = 175, Top = 140, DialogResult = DialogResult.No };
 
             p.Controls.AddRange(new Control[] { lbl, bK, bT });
 
@@ -504,95 +276,52 @@ namespace GestionImpresoras
                     {
                         string sql = $"INSERT INTO {tablaDestino} (MODELO, NSERIE, UBICACION, DESCRIPCION, FECHA) VALUES (@m, @s, @u, @d, GETDATE())";
                         SqlParameter[] param = {
-                        new SqlParameter("@m", f.Cells["MODELO"].Value?.ToString() ?? ""),
-                        new SqlParameter("@s", f.Cells["NSERIE"].Value.ToString()),
-                        new SqlParameter("@u", f.Cells["UBICACION"].Value?.ToString() ?? ""),
-                        new SqlParameter("@d", nombreConsumible)
-                    };
+                 new SqlParameter("@m", f.Cells["MODELO"].Value?.ToString() ?? ""),
+                 new SqlParameter("@s", f.Cells["NSERIE"].Value.ToString()),
+                 new SqlParameter("@u", f.Cells["UBICACION"].Value?.ToString() ?? ""),
+                 new SqlParameter("@d", nombreConsumible)
+             };
                         db.EjecutarComando(sql, param);
                     }
 
                     CargarHistorial();
                     dgvPedidoWeb.DataSource = null;
-                    MessageBox.Show("Pedidos registrados correctamente.");
+                    MessageBox.Show("Pedidos registrados correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-                catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+                catch (Exception ex) { MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
 
             // Limpiamos el buscador por si acaso
             txtBuscarSerie.Text = "";
         }
 
-        // historial y totales se cargan juntos porque comparten datos, así evitamos consultas repetidas a la base de datos
-        private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); }
-
-        // ==========================================
-        // --- NUEVA IMPRESORA ---
-        // ==========================================
         private void btnNuevo_Click(object sender, EventArgs e)
         {
             // Limpiamos los buscadores por si acaso
             txtBuscarInventario.Text = "";
-            string n = MostrarPromptNuevo();
-            if (n != null) { CargarInventario(); MessageBox.Show($"Registrado: {n}"); }
+
+            // Creamos una instancia de tu nuevo formulario
+            using (FormNuevaImpresora frmNuevo = new FormNuevaImpresora())
+            {
+                // Lo mostramos como una ventana emergente (ShowDialog)
+                if (frmNuevo.ShowDialog() == DialogResult.OK)
+                {
+                    // Si devolvió "OK", leemos la propiedad pública que creamos
+                    string serieRegistrada = frmNuevo.SerieGuardada;
+
+                    CargarInventario();
+                    MessageBox.Show($"Equipo registrado correctamente con la serie: {serieRegistrada}", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
         }
 
-        private string MostrarPromptNuevo()
-        {
-            List<string> ips = new List<string>();
-            foreach (DataRow r in db.ObtenerDatos("SELECT IP FROM IMPRESORAS WHERE IP IS NOT NULL").Rows) ips.Add(r["IP"].ToString().Trim().ToUpper());
+        private void btnCargarHistorial_Click(object sender, EventArgs e) { CargarHistorial(); }
 
-            Form p = new Form() { Width = 500, Height = 520, Text = "Nueva Impresora", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false };
+        private void btnCargarInventario_Click(object sender, EventArgs e) { CargarInventario(); }
 
-            Label lUb = new Label() { Left = 20, Top = 20, Text = "Ubicación:", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            TextBox tUb = new TextBox() { Left = 20, Top = 40, Width = 380, MaxLength = 50, CharacterCasing = CharacterCasing.Upper };
-            Label lMo = new Label() { Left = 20, Top = 80, Text = "Modelo:", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            TextBox tMo = new TextBox() { Left = 20, Top = 100, Width = 380, MaxLength = 50, CharacterCasing = CharacterCasing.Upper };
-            Label lSe = new Label() { Left = 20, Top = 140, Text = "Serie (Obligatorio):", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            TextBox tSe = new TextBox() { Left = 20, Top = 160, Width = 380, MaxLength = 30, CharacterCasing = CharacterCasing.Upper };
-            Label lIp = new Label() { Left = 20, Top = 200, Text = "IP:", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            TextBox tIp = new TextBox() { Left = 20, Top = 220, Width = 250, MaxLength = 15 };
-            Label lAv = new Label() { Left = 280, Top = 222, Width = 200, Font = new Font("Segoe UI", 8, FontStyle.Bold) };
-            Label lOb = new Label() { Left = 20, Top = 260, Text = "Observaciones:", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            TextBox tOb = new TextBox() { Left = 20, Top = 280, Width = 380, MaxLength = 40, CharacterCasing = CharacterCasing.Upper };
-            Label lGr = new Label() { Left = 20, Top = 320, Text = "Grupo:", Width = 380, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            NumericUpDown nGr = new NumericUpDown() { Left = 20, Top = 340, Width = 380, Maximum = 100 };
-
-            Button bG = new Button() { Text = "Guardar", Left = 200, Top = 400, BackColor = Color.LightGreen, DialogResult = DialogResult.None };
-            Button bC = new Button() { Text = "Cancelar", Left = 310, Top = 400, DialogResult = DialogResult.Cancel };
-
-            p.Controls.AddRange(new Control[] { lUb, tUb, lMo, tMo, lSe, tSe, lIp, tIp, lAv, lOb, tOb, lGr, nGr, bG, bC });
-            p.AcceptButton = bG; p.CancelButton = bC;
-
-            tIp.TextChanged += (s, e) =>
-            {
-                string i = tIp.Text.Trim();
-                if (string.IsNullOrEmpty(i)) { lAv.Text = ""; tIp.BackColor = Color.White; }
-                else if (!System.Net.IPAddress.TryParse(i, out _) || i.Split('.').Length != 4) { lAv.Text = "⚠️ IP INCORRECTA"; lAv.ForeColor = Color.OrangeRed; tIp.BackColor = Color.OldLace; }
-                else if (ips.Contains(i.ToUpper())) { lAv.Text = "❌ OCUPADA"; lAv.ForeColor = Color.Red; tIp.BackColor = Color.MistyRose; }
-                else { lAv.Text = "✔ DISPONIBLE"; lAv.ForeColor = Color.Green; tIp.BackColor = Color.Honeydew; }
-            };
-
-            bG.Click += (s, e) =>
-            {
-                string se = tSe.Text.Trim().ToUpper(), ub = tUb.Text.Trim().ToUpper(), mo = tMo.Text.Trim().ToUpper(), ip = tIp.Text.Trim().ToUpper();
-                if (string.IsNullOrEmpty(se) || string.IsNullOrEmpty(ub) || string.IsNullOrEmpty(mo) || string.IsNullOrEmpty(ip)) { MessageBox.Show("Faltan datos."); return; }
-                if (ips.Contains(ip)) { MessageBox.Show("IP Ocupada."); return; }
-                if (!System.Net.IPAddress.TryParse(ip, out _) || ip.Split('.').Length != 4) { MessageBox.Show("IP Incorrecta."); return; }
-                if (db.ObtenerDatos("SELECT IP FROM IMPRESORAS WHERE NSERIE=@s", new SqlParameter[] { new SqlParameter("@s", se) }).Rows.Count > 0) { MessageBox.Show("Serie existe."); return; }
-
-                string sql = "INSERT INTO IMPRESORAS (UBICACION, MODELO, NSERIE, IP, OBSERVACIONES, GRUPO) VALUES (@u, @m, @s, @i, @o, @g)";
-                SqlParameter[] pa = {
-                        new SqlParameter("@u", ub), new SqlParameter("@m", mo), new SqlParameter("@s", se), new SqlParameter("@i", ip),
-                        new SqlParameter("@o", string.IsNullOrEmpty(tOb.Text) ? (object)DBNull.Value : tOb.Text.ToUpper()),
-                        new SqlParameter("@g", nGr.Value == 0 ? (object)DBNull.Value : (int)nGr.Value)
-                };
-                try { db.EjecutarComando(sql, pa); p.DialogResult = DialogResult.OK; } catch (Exception ex) { MessageBox.Show(ex.Message); }
-            };
-
-            if (p.ShowDialog() == DialogResult.OK) return tSe.Text.ToUpper();
-            return null;
-        }
+        //-----------------------------------------------------------------------------------
+        // TEXTBOX
+        //-----------------------------------------------------------------------------------
 
         private void txtBuscarSerie_TextChanged(object sender, EventArgs e)
         {
@@ -696,10 +425,9 @@ namespace GestionImpresoras
             dgvTotales.DataSource = db.ObtenerDatos(sqlTot, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
         }
 
-        private void btnCargarInventario_Click(object sender, EventArgs e)
-        {
-            CargarInventario();
-        }
+        //-----------------------------------------------------------------------------------
+        // COMBOBOX
+        //-----------------------------------------------------------------------------------
 
         private void cmbGrupo_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -729,5 +457,267 @@ namespace GestionImpresoras
             dgvPedidoWeb.ClearSelection();
             dgvPedidoWeb.CurrentCell = null;
         }
+
+
+        //-----------------------------------------------------------------------------------
+        // EVENTOS
+        //-----------------------------------------------------------------------------------
+
+        private void Grids_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                DataGridView grid = (DataGridView)sender;
+                int seleccionados = grid.SelectedRows.Count;
+                if (seleccionados == 0) return;
+
+                isDeleting = true;
+                string msg = seleccionados == 1 ? "¿Borrar registro?" : $"¿Borrar {seleccionados} registros?";
+
+                if (MessageBox.Show(msg, "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    try
+                    {
+                        foreach (DataGridViewRow fila in grid.SelectedRows)
+                        {
+                            if (fila.IsNewRow) continue;
+                            string nSerie = fila.Cells["NSERIE"].Value?.ToString();
+
+                            if (grid.Name == "dgvInventario")
+                            {
+                                db.EjecutarComando("DELETE FROM IMPRESORAS WHERE NSERIE = @s", new SqlParameter[] { new SqlParameter("@s", nSerie) });
+                            }
+                            else if (grid.Name == "dgvHistorial")
+                            {
+                                DateTime f = Convert.ToDateTime(fila.Cells["FECHA"].Value);
+                                string descripcion = fila.Cells["DESCRIPCION"].Value?.ToString().ToUpper() ?? "";
+
+                                // Averiguamos de qué tabla borrar basándonos en la descripción
+                                string tablaBorrado = descripcion.Contains("KIT") ? "KIT_MANTENIMIENTO" : "TAMBORES";
+
+                                db.EjecutarComando($"DELETE FROM {tablaBorrado} WHERE NSERIE = @s AND FECHA = @f",
+                                    new SqlParameter[] { new SqlParameter("@s", nSerie), new SqlParameter("@f", f) });
+                            }
+                        }
+                        CargarInventario();
+                        CargarHistorial();
+                    }
+                    catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+                }
+                isDeleting = false;
+            }
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedIndex == 2)
+            {
+                CargarHistorial();
+            }
+            // Control de aviso en la pestaña Pedidos ---
+            else if (tabControl1.SelectedIndex == 1)
+            {
+                if (!avisoPedidosMostrado && cmbGrupo.SelectedIndex == -1)
+                {
+                    MessageBox.Show("Seleccione un grupo para mostrar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    avisoPedidosMostrado = true;
+                }
+            }
+        }
+
+        private void dgvInventario_RowValidated(object sender, DataGridViewCellEventArgs e)
+        {
+            if (isDeleting || dgvInventario.Rows[e.RowIndex].IsNewRow) return;
+
+            var fila = dgvInventario.Rows[e.RowIndex];
+            string nSerie = fila.Cells["NSERIE"].Value?.ToString();
+            if (string.IsNullOrEmpty(nSerie)) return;
+
+            string sql = @"IF EXISTS (SELECT 1 FROM IMPRESORAS WHERE NSERIE = @s)
+                               UPDATE IMPRESORAS SET UBICACION=@u, MODELO=@m, IP=@i, OBSERVACIONES=@o, GRUPO=@g WHERE NSERIE=@s
+                               ELSE
+                               INSERT INTO IMPRESORAS (UBICACION, MODELO, NSERIE, IP, OBSERVACIONES, GRUPO) VALUES (@u, @m, @s, @i, @o, @g)";
+
+            SqlParameter[] p = {
+                    new SqlParameter("@u", fila.Cells["UBICACION"].Value ?? ""),
+                    new SqlParameter("@m", fila.Cells["MODELO"].Value ?? ""),
+                    new SqlParameter("@s", nSerie),
+                    new SqlParameter("@i", fila.Cells["IP"].Value ?? ""),
+                    new SqlParameter("@o", fila.Cells["OBSERVACIONES"].Value ?? (object)DBNull.Value),
+                    new SqlParameter("@g", fila.Cells["GRUPO"].Value ?? (object)DBNull.Value)
+                };
+            db.EjecutarComando(sql, p);
+        }
+
+        //-----------------------------------------------------------------------------------
+        // CARGAS DE GRIDS
+        //-----------------------------------------------------------------------------------
+
+        public void CargarInventario()
+        {
+            string sql = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
+            DataTable dt = db.ObtenerDatos(sql);
+
+            if (dt != null)
+            {
+                dgvInventario.DataSource = dt;
+                AplicarEstilosGrid(dgvInventario);
+
+                dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+
+                foreach (DataGridViewColumn col in dgvInventario.Columns)
+                {
+                    if (col.Name == "OBSERVACIONES")
+                    {
+                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                        col.MinimumWidth = 100;
+                    }
+                    else
+                    {
+                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                    }
+                }
+            }
+        }
+
+        public void CargarHistorial()
+        {
+            try
+            {
+                // Unimos TAMBORES y KIT_MANTENIMIENTO para el historial detallado
+                string sqlH = @"
+                        SELECT I.GRUPO, H.FECHA, H.NSERIE, H.MODELO, H.UBICACION, H.DESCRIPCION 
+                        FROM (
+                            SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM TAMBORES
+                            UNION ALL
+                            SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM KIT_MANTENIMIENTO
+                        ) H 
+                        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+                        ORDER BY H.FECHA DESC";
+                dgvHistorial.DataSource = db.ObtenerDatos(sqlH);
+
+                // SQL MODIFICADO: Separamos fechas y totales
+                string sqlT = @"
+                        SELECT I.GRUPO, H.NSERIE, H.MODELO, 
+                               SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [TOTAL TAMBORES],
+                               MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [ÚLTIMO TAMBOR],
+                               SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [TOTAL KITS],
+                               MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [ÚLTIMO KIT]
+                        FROM (
+                            SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
+                            UNION ALL
+                            SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
+                        ) H 
+                        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+                        GROUP BY I.GRUPO, H.NSERIE, H.MODELO 
+                        ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
+                dgvTotales.DataSource = db.ObtenerDatos(sqlT);
+
+                // Limpiamos los buscadores por si acaso
+                txtBuscarHistorial.Text = "";
+                txtBuscarInventario.Text = "";
+                txtBuscarSerie.Text = "";
+
+                dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            }
+            catch { }
+        }
+
+        //-----------------------------------------------------------------------------------
+        // METODOS
+        //-----------------------------------------------------------------------------------
+
+        private void PreguntarYExportarHistorial()
+        {
+            MaterialForm prompt = new MaterialForm()
+            {
+                Width = 320,
+                Height = 240, // Le damos más altura por la cabecera de MaterialSkin
+                Text = "Exportar a Excel",
+                StartPosition = FormStartPosition.CenterParent,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                Sizable = false // Evita que estiren la ventana
+            };
+
+            // Aplicamos tu gestor de temas para que mantenga el estilo visual de tu app
+            GestorTema.ConfigurarMaterialSkin(prompt);
+
+            // Ajustamos el Top a 80 para que empiece debajo de la barra azul
+            MaterialLabel lbl = new MaterialLabel() { Left = 60, Top = 80, Width = 300, Text = "¿Qué tabla desea exportar?" };
+
+            // Cambiamos a MaterialButton y los ponemos en mayúsculas (el estándar de Material)
+            // Alineamos a la izquierda a unos 70px para que queden centrados a ojo
+            MaterialButton btnHist = new MaterialButton() { Text = "HISTORIAL", Left = 70, Top = 120, DialogResult = DialogResult.Yes };
+            MaterialButton btnTot = new MaterialButton() { Text = "PEDIDOS TOTALES", Left = 70, Top = 170, DialogResult = DialogResult.No };
+
+            prompt.Controls.AddRange(new Control[] { lbl, btnHist, btnTot });
+
+            DialogResult res = prompt.ShowDialog();
+
+            if (res == DialogResult.Yes)
+                ExportarAExcel(dgvHistorial, "InventarioImpresorasHistorico");
+            else if (res == DialogResult.No)
+                ExportarAExcel(dgvTotales, "InventarioImpresorasTotalesPedidos");
+        }
+
+        private void ExportarAExcel(DataGridView grid, string nombreBase)
+        {
+            if (grid.Rows.Count == 0) { MessageBox.Show("No hay datos para exportar."); return; }
+
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "Excel Workbook|*.xlsx";
+            sfd.FileName = $"{nombreBase}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    using (var workbook = new XLWorkbook())
+                    {
+                        var worksheet = workbook.Worksheets.Add("Datos");
+
+                        for (int i = 0; i < grid.Columns.Count; i++)
+                        {
+                            var celda = worksheet.Cell(1, i + 1);
+                            celda.Value = grid.Columns[i].HeaderText;
+                            celda.Style.Font.Bold = true;
+                            celda.Style.Fill.BackgroundColor = XLColor.LightGray;
+                            celda.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        }
+
+                        for (int i = 0; i < grid.Rows.Count; i++)
+                        {
+                            if (grid.Rows[i].IsNewRow) continue;
+
+                            for (int j = 0; j < grid.Columns.Count; j++)
+                            {
+                                var valor = grid.Rows[i].Cells[j].Value?.ToString() ?? "";
+                                var celdaExcel = worksheet.Cell(i + 2, j + 1);
+                                celdaExcel.Value = valor;
+
+                                if (grid.Columns[j].Name == "GRUPO")
+                                {
+                                    Color c = ObtenerColorPorGrupo(valor);
+                                    if (c != Color.White)
+                                    {
+                                        celdaExcel.Style.Fill.BackgroundColor = XLColor.FromColor(c);
+                                    }
+                                }
+                            }
+                        }
+
+                        worksheet.Columns().AdjustToContents();
+                        workbook.SaveAs(sfd.FileName);
+                        MessageBox.Show("Exportado correctamente. ✔");
+                    }
+                }
+                catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+            }
+        }
+
+
+
     }
 }

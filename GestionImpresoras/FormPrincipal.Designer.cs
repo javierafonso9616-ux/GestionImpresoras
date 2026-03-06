@@ -656,13 +656,13 @@
             this.materialTabSelector1.TabIndex = 0;
             this.materialTabSelector1.Text = "materialTabSelector1";
             // 
-            // Form2
+            // FormPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1920, 1080);
             this.Controls.Add(this.materialCardBase);
-            this.Name = "Form2";
+            this.Name = "FormPrincipal";
             this.Text = "Gestión Impresoras";
             this.Load += new System.EventHandler(this.Form2_Load);
             this.materialCardBase.ResumeLayout(false);
