@@ -47,6 +47,7 @@ namespace GestionImpresoras
             lblAvisoIP.Text = "";
             // FOCO EN EL CAMPO UBICACION
             txtUbicacion.Select();
+            ActiveControl = txtUbicacion;
         }
 
         //-----------------------------------------------------------------------------------
@@ -90,7 +91,12 @@ namespace GestionImpresoras
             // 1. Validaciones básicas
             if (string.IsNullOrEmpty(se) || string.IsNullOrEmpty(ub) || string.IsNullOrEmpty(mo) || string.IsNullOrEmpty(ip))
             {
-                MostrarMaterialMessageBox("Faltan datos obligatorios.", "Aviso");
+                MostrarMaterialMessageBox("Faltan datos obligatorios." +
+                    "\n Datos obligatorios: " +
+                    "\n * Ubicación " +
+                    "\n * Modelo " +
+                    "\n * Nº Serie " +
+                    "\n * IP", "Aviso");
                 return;
             }
 
@@ -171,7 +177,7 @@ namespace GestionImpresoras
             MaterialForm msgForm = new MaterialForm()
             {
                 Width = 400,
-                Height = 200,
+                Height = 250,
                 Text = titulo,
                 StartPosition = FormStartPosition.CenterParent,
                 MaximizeBox = false,
@@ -186,11 +192,12 @@ namespace GestionImpresoras
                 Left = 20,
                 Top = 80,
                 Width = 360,
+                Height = 120,
                 Text = mensaje
             };
 
             // Para avisos simples solo necesitamos un botón ACEPTAR
-            MaterialButton btnOk = new MaterialButton() { Text = "ACEPTAR", Left = 280, Top = 150, DialogResult = DialogResult.OK };
+            MaterialButton btnOk = new MaterialButton() { Text = "ACEPTAR", Left = 280, Top = 200, DialogResult = DialogResult.OK };
 
             msgForm.Controls.AddRange(new Control[] { lbl, btnOk });
 

@@ -32,8 +32,23 @@ namespace GestionImpresoras
             GestorTema.ConfigurarMaterialSkin(this);
             this.WindowState = FormWindowState.Maximized;
             this.MaximizedBounds = Screen.FromHandle(this.Handle).WorkingArea; // EVITA QUE SE SOLAPE CON LA BARRA DE TAREAS AL MAXIMIZAR
+
+            RellenarcmbGrupo();
+            ConfigurarGrids();
         }
 
+        // -----------------------------------------------------------------------------------
+        //  ACELERAR EL DIBUJADO DE LA INTERFAZ 
+        // -----------------------------------------------------------------------------------
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
+                return cp;
+            }
+        }
         //-----------------------------------------------------------------------------------
         // EVENTO LOAD (CARGA EL FORMULARIO)
         //-----------------------------------------------------------------------------------
@@ -44,11 +59,13 @@ namespace GestionImpresoras
             // Limpiamos los buscadores por si acaso
             txtBuscarInventario.Text = "";
 
-            RellenarcmbGrupo();
-            ConfigurarGrids();
 
-            CargarInventario();
-            CargarHistorial(); // historial y totales se cargan juntos porque comparten datos
+            this.BeginInvoke(new Action(() =>
+
+            {
+                CargarInventario();
+                CargarHistorial(); // historial y totales se cargan juntos porque comparten datos
+            }));
         }
 
         //-----------------------------------------------------------------------------------
@@ -89,6 +106,8 @@ namespace GestionImpresoras
             dgvTotales.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvTotales.MultiSelect = false;
             dgvTotales.CellFormatting += AplicarColoresGrupo;
+            dgvTotales.AllowUserToDeleteRows = false;
+
 
             // configuraciones generales de estilo para todos los grids
             AplicarEstilosVarios(dgvInventario, dgvPedidoWeb, dgvHistorial, dgvTotales);
@@ -450,14 +469,16 @@ namespace GestionImpresoras
                 return;
             }
 
-
             string sql; SqlParameter[] p = null;
 
             if (cmbGrupo.Text == "Sin Grupo")
+            {
                 sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO IS NULL OR GRUPO = ''";
+            }
             else
             {
-                sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO = @g AND MODELO LIKE '%4510%'";
+                // SOLUCIÓN: Hemos quitado el "AND MODELO LIKE '%4510%'"
+                sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO = @g";
                 p = new SqlParameter[] { new SqlParameter("@g", cmbGrupo.Text) };
             }
 
@@ -478,6 +499,8 @@ namespace GestionImpresoras
 
         private void Grids_KeyDown(object sender, KeyEventArgs e)
         {
+
+
             if (e.KeyCode == Keys.Delete)
             {
                 DataGridView grid = (DataGridView)sender;
@@ -518,6 +541,7 @@ namespace GestionImpresoras
                         }
                         CargarInventario();
                         CargarHistorial();
+                        new MaterialSnackBar("Borrado correctamente . ✔", 3000, "OK", true).Show(this);
                     }
                     catch (Exception ex) { new MaterialSnackBar("Error: " + ex.Message, "OK", true).Show(this); }
                 }
@@ -566,12 +590,18 @@ namespace GestionImpresoras
             db.EjecutarComando(sql, p);
         }
 
+        private void dgvTotales_KeyDown(object sender, KeyEventArgs e)
+        {
+            MostrarMaterialMessageBoxAsecas("Para borrar un pedido hagalo en la tabla historial", "Borrado denegado");
+        }
+
         //-----------------------------------------------------------------------------------
         // CARGAS DE GRIDS
         //-----------------------------------------------------------------------------------
 
         public void CargarInventario()
         {
+
             string sql = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
             DataTable dt = db.ObtenerDatos(sql);
 
@@ -591,7 +621,7 @@ namespace GestionImpresoras
                     }
                     else
                     {
-                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
                     }
                 }
             }
@@ -599,6 +629,7 @@ namespace GestionImpresoras
 
         public void CargarHistorial()
         {
+
             try
             {
                 // Unimos TAMBORES y KIT_MANTENIMIENTO para el historial detallado
@@ -612,6 +643,10 @@ namespace GestionImpresoras
                         LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
                         ORDER BY H.FECHA DESC";
                 dgvHistorial.DataSource = db.ObtenerDatos(sqlH);
+
+                // Volvemos a aplicar estilos
+                AplicarEstilosGrid(dgvHistorial);
+
 
                 // SQL MODIFICADO: Separamos fechas y totales
                 string sqlT = @"
@@ -629,6 +664,9 @@ namespace GestionImpresoras
                         GROUP BY I.GRUPO, H.NSERIE, H.MODELO 
                         ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
                 dgvTotales.DataSource = db.ObtenerDatos(sqlT);
+
+                // Volvemos a aplicar estilos
+                AplicarEstilosGrid(dgvTotales);
 
                 // Limpiamos los buscadores por si acaso
                 txtBuscarHistorial.Text = "";
@@ -764,6 +802,37 @@ namespace GestionImpresoras
 
             return msgForm.ShowDialog();
         }
+
+        private DialogResult MostrarMaterialMessageBoxAsecas(string mensaje, string titulo)
+        {
+            MaterialForm msgForm = new MaterialForm()
+            {
+                Width = 400,
+                Height = 200,
+                Text = titulo,
+                StartPosition = FormStartPosition.CenterParent,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                Sizable = false
+            };
+
+            GestorTema.ConfigurarMaterialSkin(msgForm);
+
+            MaterialLabel lbl = new MaterialLabel()
+            {
+                Left = 20,
+                Top = 80,
+                Width = 360,
+                Text = mensaje
+            };
+
+            MaterialButton btnOk = new MaterialButton() { Text = "ACEPTAR", Left = 280, Top = 150, DialogResult = DialogResult.OK };
+
+            msgForm.Controls.AddRange(new Control[] { lbl, btnOk });
+
+            return msgForm.ShowDialog();
+        }
+
 
     }
 }

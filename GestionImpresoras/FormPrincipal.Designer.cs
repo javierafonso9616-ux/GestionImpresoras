@@ -487,6 +487,7 @@
             this.dgvTotales.Name = "dgvTotales";
             this.dgvTotales.Size = new System.Drawing.Size(909, 762);
             this.dgvTotales.TabIndex = 2;
+            this.dgvTotales.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dgvTotales_KeyDown);
             // 
             // materialLabel5
             // 

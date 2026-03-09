@@ -32,6 +32,7 @@
             this.lbModelo = new MaterialSkin.Controls.MaterialLabel();
             this.lbNSerie = new MaterialSkin.Controls.MaterialLabel();
             this.materialCardNuevaImpresora = new MaterialSkin.Controls.MaterialCard();
+            this.lblAvisoIP = new System.Windows.Forms.Label();
             this.btnGuardar = new MaterialSkin.Controls.MaterialButton();
             this.btnCancelar = new MaterialSkin.Controls.MaterialButton();
             this.txtGrupo = new MaterialSkin.Controls.MaterialTextBox2();
@@ -43,7 +44,6 @@
             this.lbObservaciones = new MaterialSkin.Controls.MaterialLabel();
             this.lbGrupo = new MaterialSkin.Controls.MaterialLabel();
             this.lbIP = new MaterialSkin.Controls.MaterialLabel();
-            this.lblAvisoIP = new System.Windows.Forms.Label();
             this.materialCardNuevaImpresora.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -79,9 +79,9 @@
             this.lbNSerie.Location = new System.Drawing.Point(96, 243);
             this.lbNSerie.MouseState = MaterialSkin.MouseState.HOVER;
             this.lbNSerie.Name = "lbNSerie";
-            this.lbNSerie.Size = new System.Drawing.Size(174, 19);
+            this.lbNSerie.Size = new System.Drawing.Size(58, 19);
             this.lbNSerie.TabIndex = 2;
-            this.lbNSerie.Text = "Nº Serie (OBLIGATORIO)";
+            this.lbNSerie.Text = "Nº Serie";
             // 
             // materialCardNuevaImpresora
             // 
@@ -113,6 +113,16 @@
             this.materialCardNuevaImpresora.Size = new System.Drawing.Size(794, 413);
             this.materialCardNuevaImpresora.TabIndex = 3;
             // 
+            // lblAvisoIP
+            // 
+            this.lblAvisoIP.AutoSize = true;
+            this.lblAvisoIP.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAvisoIP.Location = new System.Drawing.Point(468, 61);
+            this.lblAvisoIP.Name = "lblAvisoIP";
+            this.lblAvisoIP.Size = new System.Drawing.Size(87, 17);
+            this.lblAvisoIP.TabIndex = 14;
+            this.lblAvisoIP.Text = "texto prueba";
+            // 
             // btnGuardar
             // 
             this.btnGuardar.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
@@ -138,6 +148,7 @@
             this.btnCancelar.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnCancelar.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
             this.btnCancelar.Depth = 0;
+            this.btnCancelar.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancelar.HighEmphasis = true;
             this.btnCancelar.Icon = null;
             this.btnCancelar.Location = new System.Drawing.Point(594, 355);
@@ -305,6 +316,7 @@
             this.txtUbicacion.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.txtUbicacion.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.txtUbicacion.Depth = 0;
+            this.txtUbicacion.ErrorMessage = "Dato obligatorio";
             this.txtUbicacion.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
             this.txtUbicacion.HideSelection = true;
             this.txtUbicacion.LeadingIcon = null;
@@ -356,23 +368,13 @@
             // 
             this.lbIP.AutoSize = true;
             this.lbIP.Depth = 0;
-            this.lbIP.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            this.lbIP.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
             this.lbIP.Location = new System.Drawing.Point(437, 61);
             this.lbIP.MouseState = MaterialSkin.MouseState.HOVER;
             this.lbIP.Name = "lbIP";
             this.lbIP.Size = new System.Drawing.Size(15, 19);
             this.lbIP.TabIndex = 3;
             this.lbIP.Text = "IP";
-            // 
-            // lblAvisoIP
-            // 
-            this.lblAvisoIP.AutoSize = true;
-            this.lblAvisoIP.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAvisoIP.Location = new System.Drawing.Point(468, 61);
-            this.lblAvisoIP.Name = "lblAvisoIP";
-            this.lblAvisoIP.Size = new System.Drawing.Size(87, 17);
-            this.lblAvisoIP.TabIndex = 14;
-            this.lblAvisoIP.Text = "texto prueba";
             // 
             // FormNuevaImpresora
             // 
@@ -383,6 +385,7 @@
             this.ClientSize = new System.Drawing.Size(800, 480);
             this.Controls.Add(this.materialCardNuevaImpresora);
             this.Name = "FormNuevaImpresora";
+            this.Sizable = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Nueva Impresora";
             this.Load += new System.EventHandler(this.FormNuevaImpresora_Load);
