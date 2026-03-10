@@ -178,9 +178,9 @@
             this.materialLabel6.Location = new System.Drawing.Point(323, 20);
             this.materialLabel6.MouseState = MaterialSkin.MouseState.HOVER;
             this.materialLabel6.Name = "materialLabel6";
-            this.materialLabel6.Size = new System.Drawing.Size(138, 19);
+            this.materialLabel6.Size = new System.Drawing.Size(225, 19);
             this.materialLabel6.TabIndex = 4;
-            this.materialLabel6.Text = "Buscar por Nº Serie";
+            this.materialLabel6.Text = "Buscar por Nº Serie o Ubicación";
             // 
             // txtBuscarInventario
             // 
@@ -564,7 +564,7 @@
             // 
             this.txtBuscarHistorial.AnimateReadOnly = false;
             this.txtBuscarHistorial.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.txtBuscarHistorial.CharacterCasing = System.Windows.Forms.CharacterCasing.Normal;
+            this.txtBuscarHistorial.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.txtBuscarHistorial.Depth = 0;
             this.txtBuscarHistorial.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
             this.txtBuscarHistorial.HideSelection = true;

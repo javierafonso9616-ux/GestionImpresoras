@@ -396,7 +396,7 @@ namespace GestionImpresoras
                 return;
             }
 
-            string sqlInv = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS WHERE NSERIE LIKE @s ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
+            string sqlInv = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS WHERE NSERIE LIKE @s or UBICACION LIKE @s ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
             DataTable dtInv = db.ObtenerDatos(sqlInv, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
 
             if (dtInv != null)
@@ -433,26 +433,28 @@ namespace GestionImpresoras
                 SELECT FECHA, NSERIE, MODELO, UBICACION, DESCRIPCION FROM KIT_MANTENIMIENTO
             ) H 
             LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
-            WHERE H.NSERIE LIKE @s
+            WHERE H.NSERIE LIKE @s OR I.UBICACION LIKE @s
             ORDER BY H.FECHA DESC";
             dgvHistorial.DataSource = db.ObtenerDatos(sqlHist, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
 
             // 2. Filtramos en la tabla de Totales CON EL DESGLOSE DE FECHAS
+
             string sqlTot = @"
-            SELECT I.GRUPO, H.NSERIE, H.MODELO, 
-                   SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [TOTAL TAMBORES],
-                   MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [ÚLTIMO TAMBOR],
-                   SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [TOTAL KITS],
-                   MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [ÚLTIMO KIT]
-            FROM (
-                SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
-                UNION ALL
-                SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
-            ) H 
-            LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
-            WHERE H.NSERIE LIKE @s
-            GROUP BY I.GRUPO, H.NSERIE, H.MODELO 
-            ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
+                        SELECT I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO, 
+                               SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [TOTAL TAMBORES],
+                               MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [ÚLTIMO TAMBOR],
+                               SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [TOTAL KITS],
+                               MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [ÚLTIMO KIT]
+                        FROM (
+                            SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
+                            UNION ALL
+                            SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
+                        ) H 
+                        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+                        WHERE H.NSERIE LIKE @s OR I.UBICACION LIKE @s
+                        GROUP BY I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO 
+                        ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
+
             dgvTotales.DataSource = db.ObtenerDatos(sqlTot, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
         }
 
