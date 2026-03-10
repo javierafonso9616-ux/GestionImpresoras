@@ -23,6 +23,9 @@ namespace GestionImpresoras
         // BANDERA PARA CONTROLAR EL AVISO DE SELECCIÓN DE GRUPO EN LA PESTAÑA DE PEDIDOS, ASÍ SOLO SE MUESTRA UNA VEZ
         bool avisoPedidosMostrado = false;
 
+        // TIMER PARA CONTROLAR EL RETRASO DE BUSQUEDA (DEBOUNCE)
+        private Timer timerBusqueda;
+
         // -----------------------------------------------------------------------------------
         // CONSTRUCTOR
         // -----------------------------------------------------------------------------------
@@ -33,6 +36,11 @@ namespace GestionImpresoras
             this.WindowState = FormWindowState.Maximized;
             this.MaximizedBounds = Screen.FromHandle(this.Handle).WorkingArea; // EVITA QUE SE SOLAPE CON LA BARRA DE TAREAS AL MAXIMIZAR
 
+            // CONFIGURACIÓN DEL TIMER DE BÚSQUEDA
+            timerBusqueda = new Timer();
+            timerBusqueda.Interval = 300; // 0,3 segundos de espera
+            timerBusqueda.Tick += timerBusqueda_Tick;
+
             RellenarcmbGrupo();
             ConfigurarGrids();
         }
@@ -40,6 +48,7 @@ namespace GestionImpresoras
         // -----------------------------------------------------------------------------------
         //  ACELERAR EL DIBUJADO DE LA INTERFAZ 
         // -----------------------------------------------------------------------------------
+
         protected override CreateParams CreateParams
         {
             get
@@ -49,19 +58,17 @@ namespace GestionImpresoras
                 return cp;
             }
         }
+
         //-----------------------------------------------------------------------------------
         // EVENTO LOAD (CARGA EL FORMULARIO)
         //-----------------------------------------------------------------------------------
+
         private void Form2_Load(object sender, EventArgs e)
         {
-
-
             // Limpiamos los buscadores por si acaso
             txtBuscarInventario.Text = "";
 
-
             this.BeginInvoke(new Action(() =>
-
             {
                 CargarInventario();
                 CargarHistorial(); // historial y totales se cargan juntos porque comparten datos
@@ -107,6 +114,7 @@ namespace GestionImpresoras
             dgvTotales.MultiSelect = false;
             dgvTotales.CellFormatting += AplicarColoresGrupo;
             dgvTotales.AllowUserToDeleteRows = false;
+            dgvTotales.KeyDown += dgvTotales_KeyDown;
 
 
             // configuraciones generales de estilo para todos los grids
@@ -115,6 +123,7 @@ namespace GestionImpresoras
 
         private void AplicarEstilosGrid(DataGridView grid)
         {
+            grid.SuspendLayout();
             Color azulOscuro = Color.FromArgb(13, 71, 161);
             grid.BackgroundColor = Color.White;
             grid.BorderStyle = BorderStyle.None;
@@ -140,6 +149,7 @@ namespace GestionImpresoras
                 grid.Columns["GRUPO"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 grid.Columns["GRUPO"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
+            grid.ResumeLayout();
         }
 
         public void AplicarEstilosVarios(params DataGridView[] grids)
@@ -351,10 +361,32 @@ namespace GestionImpresoras
         private void btnCargarInventario_Click(object sender, EventArgs e) { CargarInventario(); }
 
         //-----------------------------------------------------------------------------------
-        // TEXTBOX
+        // TEXTBOX (RETARDADOS POR EL TIMER)
         //-----------------------------------------------------------------------------------
 
         private void txtBuscarSerie_TextChanged(object sender, EventArgs e)
+        {
+            timerBusqueda.Stop();
+            timerBusqueda.Start();
+        }
+
+        private void txtBuscarInventario_TextChanged(object sender, EventArgs e)
+        {
+            timerBusqueda.Stop();
+            timerBusqueda.Start();
+        }
+
+        private void txtBuscarHistorial_TextChanged(object sender, EventArgs e)
+        {
+            timerBusqueda.Stop();
+            timerBusqueda.Start();
+        }
+
+        //-----------------------------------------------------------------------------------
+        // FUNCIONES REALES DE BUSQUEDA (EJECUTADAS TRAS EL DELAY)
+        //-----------------------------------------------------------------------------------
+
+        private void RealizarBusquedaSerie()
         {
             string serieABuscar = txtBuscarSerie.Text.Trim();
 
@@ -371,12 +403,8 @@ namespace GestionImpresoras
 
             if (dt != null && dt.Rows.Count > 0)
             {
-                // 1. Asignamos los datos al grid
                 dgvPedidoWeb.DataSource = dt;
-
-                // 2. Volvemos a aplicar los estilos generales y el centrado de la columna GRUPO
                 AplicarEstilosGrid(dgvPedidoWeb);
-
                 dgvPedidoWeb.ClearSelection();
                 dgvPedidoWeb.CurrentCell = null;
             }
@@ -386,13 +414,13 @@ namespace GestionImpresoras
             }
         }
 
-        private void txtBuscarInventario_TextChanged(object sender, EventArgs e)
+        private void RealizarBusquedaInventario()
         {
             string serieABuscar = txtBuscarInventario.Text.Trim();
 
             if (string.IsNullOrEmpty(serieABuscar))
             {
-                CargarInventario(); // Si borra el texto, carga todo
+                CargarInventario();
                 return;
             }
 
@@ -402,9 +430,7 @@ namespace GestionImpresoras
             if (dtInv != null)
             {
                 dgvInventario.DataSource = dtInv;
-
                 AplicarEstilosGrid(dgvInventario);
-
                 dgvInventario.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
                 foreach (DataGridViewColumn col in dgvInventario.Columns)
                 {
@@ -414,17 +440,16 @@ namespace GestionImpresoras
             }
         }
 
-        private void txtBuscarHistorial_TextChanged(object sender, EventArgs e)
+        private void RealizarBusquedaHistorial()
         {
             string serieABuscar = txtBuscarHistorial.Text.Trim();
 
             if (string.IsNullOrEmpty(serieABuscar))
             {
-                CargarHistorial(); // Recarga las dos tablas completas
+                CargarHistorial();
                 return;
             }
 
-            // 1. Filtramos en la tabla de Historial Completo
             string sqlHist = @"
             SELECT I.GRUPO, H.FECHA, H.NSERIE, H.MODELO, H.UBICACION, H.DESCRIPCION 
             FROM (
@@ -436,26 +461,36 @@ namespace GestionImpresoras
             WHERE H.NSERIE LIKE @s OR I.UBICACION LIKE @s
             ORDER BY H.FECHA DESC";
             dgvHistorial.DataSource = db.ObtenerDatos(sqlHist, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
-
-            // 2. Filtramos en la tabla de Totales CON EL DESGLOSE DE FECHAS
+            AplicarEstilosGrid(dgvHistorial);
 
             string sqlTot = @"
-                        SELECT I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO, 
-                               SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [TOTAL TAMBORES],
-                               MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [ÚLTIMO TAMBOR],
-                               SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [TOTAL KITS],
-                               MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [ÚLTIMO KIT]
-                        FROM (
-                            SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
-                            UNION ALL
-                            SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
-                        ) H 
-                        LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
-                        WHERE H.NSERIE LIKE @s OR I.UBICACION LIKE @s
-                        GROUP BY I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO 
-                        ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
-
+            SELECT I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO, 
+                   SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [TOTAL TAMBORES],
+                   MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [ÚLTIMO TAMBOR],
+                   SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [TOTAL KITS],
+                   MAX(CASE WHEN H.TIPO = 'KIT' THEN H.FECHA END) as [ÚLTIMO KIT]
+            FROM (
+                SELECT FECHA, NSERIE, MODELO, 'TAMBOR' as TIPO FROM TAMBORES
+                UNION ALL
+                SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
+            ) H 
+            LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
+            WHERE H.NSERIE LIKE @s OR I.UBICACION LIKE @s
+            GROUP BY I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO 
+            ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
             dgvTotales.DataSource = db.ObtenerDatos(sqlTot, new SqlParameter[] { new SqlParameter("@s", "%" + serieABuscar + "%") });
+            AplicarEstilosGrid(dgvTotales);
+
+            if (dgvHistorial.ColumnCount > 0)
+            {
+                dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+                if (dgvHistorial.Columns.Contains("UBICACION")) dgvHistorial.Columns["UBICACION"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            }
+            if (dgvTotales.ColumnCount > 0)
+            {
+                dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+                if (dgvTotales.Columns.Contains("UBICACION")) dgvTotales.Columns["UBICACION"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            }
         }
 
         //-----------------------------------------------------------------------------------
@@ -479,7 +514,6 @@ namespace GestionImpresoras
             }
             else
             {
-                // SOLUCIÓN: Hemos quitado el "AND MODELO LIKE '%4510%'"
                 sql = "SELECT GRUPO, UBICACION, MODELO, NSERIE FROM IMPRESORAS WHERE GRUPO = @g";
                 p = new SqlParameter[] { new SqlParameter("@g", cmbGrupo.Text) };
             }
@@ -498,6 +532,19 @@ namespace GestionImpresoras
         //-----------------------------------------------------------------------------------
         // EVENTOS
         //-----------------------------------------------------------------------------------
+
+        private void timerBusqueda_Tick(object sender, EventArgs e)
+        {
+            timerBusqueda.Stop();
+
+            // Identificamos en qué pestaña estamos para saber qué búsqueda ejecutar
+            switch (tabControl1.SelectedIndex)
+            {
+                case 0: RealizarBusquedaInventario(); break;
+                case 1: RealizarBusquedaSerie(); break;
+                case 2: RealizarBusquedaHistorial(); break;
+            }
+        }
 
         private void Grids_KeyDown(object sender, KeyEventArgs e)
         {
@@ -553,16 +600,13 @@ namespace GestionImpresoras
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedIndex == 2)
-            {
-                CargarHistorial();
-            }
+            // ELIMINADA CARGA AUTOMÁTICA AQUÍ PARA EVITAR LENTITUD
             // Control de aviso en la pestaña Pedidos ---
-            else if (tabControl1.SelectedIndex == 1)
+            if (tabControl1.SelectedIndex == 1)
             {
                 if (!avisoPedidosMostrado && cmbGrupo.SelectedIndex == -1)
                 {
-                    new MaterialSnackBar("AVISO: \nSeleccione un grupo para mostrar.", 20000, "OK", true).Show(this);
+                    new MaterialSnackBar("AVISO: \nSeleccione un grupo para mostrar.", 3000, "OK", true).Show(this);
                     avisoPedidosMostrado = true;
                 }
             }
@@ -594,7 +638,10 @@ namespace GestionImpresoras
 
         private void dgvTotales_KeyDown(object sender, KeyEventArgs e)
         {
-            MostrarMaterialMessageBoxAsecas("Para borrar un pedido hagalo en la tabla historial", "Borrado denegado");
+            if (e.KeyCode == Keys.Delete)
+            {
+                MostrarMaterialMessageBoxAsecas("Para borrar un pedido hagalo en la tabla historial", "Borrado denegado");
+            }
         }
 
         //-----------------------------------------------------------------------------------
@@ -603,7 +650,7 @@ namespace GestionImpresoras
 
         public void CargarInventario()
         {
-
+            dgvInventario.SuspendLayout();
             string sql = "SELECT GRUPO, MODELO, UBICACION, NSERIE, IP, OBSERVACIONES FROM IMPRESORAS ORDER BY (CASE WHEN GRUPO IS NULL THEN 1 ELSE 0 END), GRUPO ASC";
             DataTable dt = db.ObtenerDatos(sql);
 
@@ -627,14 +674,17 @@ namespace GestionImpresoras
                     }
                 }
             }
+            dgvInventario.ResumeLayout();
         }
 
         public void CargarHistorial()
         {
-
             try
             {
-                // Unimos TAMBORES y KIT_MANTENIMIENTO para el historial detallado
+                dgvHistorial.SuspendLayout();
+                dgvTotales.SuspendLayout();
+
+                // 1. Unimos TAMBORES y KIT_MANTENIMIENTO para el historial detallado
                 string sqlH = @"
                         SELECT I.GRUPO, H.FECHA, H.NSERIE, H.MODELO, H.UBICACION, H.DESCRIPCION 
                         FROM (
@@ -644,15 +694,14 @@ namespace GestionImpresoras
                         ) H 
                         LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
                         ORDER BY H.FECHA DESC";
-                dgvHistorial.DataSource = db.ObtenerDatos(sqlH);
 
-                // Volvemos a aplicar estilos
+                DataTable dtH = db.ObtenerDatos(sqlH);
+                dgvHistorial.DataSource = dtH;
                 AplicarEstilosGrid(dgvHistorial);
 
-
-                // SQL MODIFICADO: Separamos fechas y totales
+                // 2. Totales (AHORA CON UBICACIÓN)
                 string sqlT = @"
-                        SELECT I.GRUPO, H.NSERIE, H.MODELO, 
+                        SELECT I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO, 
                                SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) as [TOTAL TAMBORES],
                                MAX(CASE WHEN H.TIPO = 'TAMBOR' THEN H.FECHA END) as [ÚLTIMO TAMBOR],
                                SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END) as [TOTAL KITS],
@@ -663,11 +712,11 @@ namespace GestionImpresoras
                             SELECT FECHA, NSERIE, MODELO, 'KIT' as TIPO FROM KIT_MANTENIMIENTO
                         ) H 
                         LEFT JOIN IMPRESORAS I ON H.NSERIE = I.NSERIE 
-                        GROUP BY I.GRUPO, H.NSERIE, H.MODELO 
+                        GROUP BY I.GRUPO, I.UBICACION, H.NSERIE, H.MODELO 
                         ORDER BY I.GRUPO ASC, (SUM(CASE WHEN H.TIPO = 'TAMBOR' THEN 1 ELSE 0 END) + SUM(CASE WHEN H.TIPO = 'KIT' THEN 1 ELSE 0 END)) DESC";
-                dgvTotales.DataSource = db.ObtenerDatos(sqlT);
 
-                // Volvemos a aplicar estilos
+                DataTable dtT = db.ObtenerDatos(sqlT);
+                dgvTotales.DataSource = dtT;
                 AplicarEstilosGrid(dgvTotales);
 
                 // Limpiamos los buscadores por si acaso
@@ -675,14 +724,29 @@ namespace GestionImpresoras
                 txtBuscarInventario.Text = "";
                 txtBuscarSerie.Text = "";
 
-                dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-                dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                // --- AJUSTE VISUAL SEGURO ---
+                if (dgvHistorial.ColumnCount > 0)
+                {
+                    dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+                    if (dgvHistorial.Columns.Contains("UBICACION")) { dgvHistorial.Columns["UBICACION"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; dgvHistorial.Columns["UBICACION"].MinimumWidth = 100; }
+                    if (dgvHistorial.Columns.Contains("DESCRIPCION")) { dgvHistorial.Columns["DESCRIPCION"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; dgvHistorial.Columns["DESCRIPCION"].MinimumWidth = 100; }
+                }
+
+                if (dgvTotales.ColumnCount > 0)
+                {
+                    dgvTotales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+                    if (dgvTotales.Columns.Contains("UBICACION")) { dgvTotales.Columns["UBICACION"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; dgvTotales.Columns["UBICACION"].MinimumWidth = 100; }
+                    if (dgvTotales.Columns.Contains("MODELO")) { dgvTotales.Columns["MODELO"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; dgvTotales.Columns["MODELO"].MinimumWidth = 100; }
+                }
+
+                dgvHistorial.ResumeLayout();
+                dgvTotales.ResumeLayout();
             }
             catch { }
         }
 
         //-----------------------------------------------------------------------------------
-        // METODOS
+        // METODOS DE APOYO
         //-----------------------------------------------------------------------------------
 
         private void PreguntarYExportarHistorial()
