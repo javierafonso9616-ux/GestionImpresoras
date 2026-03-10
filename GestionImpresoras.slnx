@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="GestionImpresoras/GestionImpresoras.csproj" />
+  <Project Path="Gestion-impresoras/Gestion-impresoras.vdproj" Type="Installer">
+    <Build />
+  </Project>
+  <Project Path="GestionImpresoras/GestionImpresoras.csproj" Id="28e6c550-2483-48f6-adf2-82a3357e1a7d" />
 </Solution>

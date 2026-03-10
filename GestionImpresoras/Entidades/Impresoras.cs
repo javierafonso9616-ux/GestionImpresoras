@@ -8,7 +8,7 @@ namespace GestionImpresoras.Entidades
 {
     public class Impresoras
     {
-        public byte N_MAQUINA { get; set; }
+        
         public string UBICACION { get; set; }
         public string MODELO { get; set; }
         public string NSERIE { get; set; } // Clave Primaria
