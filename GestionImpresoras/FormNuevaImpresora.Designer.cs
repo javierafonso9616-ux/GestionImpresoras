@@ -172,6 +172,7 @@
             this.txtGrupo.Depth = 0;
             this.txtGrupo.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
             this.txtGrupo.HideSelection = true;
+            this.txtGrupo.Hint = "(En blanco = Sin grupo )";
             this.txtGrupo.LeadingIcon = null;
             this.txtGrupo.Location = new System.Drawing.Point(440, 280);
             this.txtGrupo.MaxLength = 32767;
